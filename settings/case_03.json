@@ -18,37 +18,30 @@
         "Name": "網址",
         "ControlType": "UIA_EditControlTypeId (0xC354)",
         "Action": "send_keys()",
-        "value": "C:\\Users\\arif1\\Downloads\\SAVE\\未命名的轉存"
+        "value": "C:\\Users\\arif1\\Downloads\\SAVE\\未命名的轉存{ENTER}"
     },
     "4": {
-        "app": "Image To PDF Converter App For Desktop",
-        "Name": "網址",
-        "ControlType": "UIA_EditControlTypeId (0xC354)",
-        "Action": "send_keys()",
-        "value": "{ENTER}"
-    },
-    "5": {
         "app": "Image To PDF Converter App For Desktop",
         "Name": "IMG_4301.JPG",
         "ControlType": "UIA_ListItemControlTypeId (0xC357)",
         "Action": "click_input()",
         "value": ""
     },
-    "6": {
+    "5": {
         "app": "Image To PDF Converter App For Desktop",
         "Name": "開啟(O)",
         "ControlType": "UIA_SplitButtonControlTypeId (0xC36F)",
         "Action": "click_input()",
         "value": ""
     },
-    "7": {
+    "6": {
         "app": "Image To PDF Converter App For Desktop",
         "Name": " Clear All",
         "ControlType": "UIA_ButtonControlTypeId (0xC350)",
         "Action": "click_input()",
         "value": ""
     },
-    "8": {
+    "7": {
         "app": "Image To PDF Converter App For Desktop",
         "Name": "Yes",
         "ControlType": "UIA_ButtonControlTypeId (0xC350)",

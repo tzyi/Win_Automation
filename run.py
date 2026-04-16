@@ -170,16 +170,23 @@ def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
         if not value:
             logger.error(f"send_keys() 需要提供 value，但 value 為空: '{control_name}'")
             raise ValueError(f"send_keys() 需要提供 value: '{control_name}'")
-        ctrl.type_keys(value, with_spaces=True)
+        # 明確設定焦點後等待 UI 完成焦點轉換，防止 {ENTER} 等特殊鍵
+        # 在焦點未穩定時丟失（尤其是 Windows 檔案對話框地址列 / 網址列）
+        try:
+            ctrl.set_focus()
+            time.sleep(0.08)
+        except Exception:
+            pass
+        ctrl.type_keys(value, with_spaces=True, pause=0.05)
     elif action_lower.startswith("type_keys("):
         # 若有 value，優先使用 value；否則解析 action 字串內嵌文字
         if value:
-            ctrl.type_keys(value, with_spaces=True)
+            ctrl.type_keys(value, with_spaces=True, pause=0.05)
         else:
             match = re.match(r"type_keys\(['\"](.+)['\"]\)", action_str.strip())
             if match:
                 keys = match.group(1)
-                ctrl.type_keys(keys, with_spaces=True)
+                ctrl.type_keys(keys, with_spaces=True, pause=0.05)
             else:
                 logger.error(f"無法解析 type_keys 參數: {action_str}")
                 raise ValueError(f"無法解析 type_keys 參數: {action_str}")
