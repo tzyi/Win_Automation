@@ -136,13 +136,14 @@ dlg.child_window(title="控件名稱", control_type="Button").click_input()
 
 ### 支援的操作類型
 
-- click_input()：左鍵點擊
+- click_input()：左鍵物理點擊（需元素在螢幕可視區域）
+- click()：左鍵程式化點擊（使用 UIA Invoke Pattern，不移動滑鼠）
 - double_click_input()：雙擊
 - right_click_input()：右鍵
 - send_keys() / type_keys()：鍵盤輸入
 - set_text()：直接設值（輸入框）
 
-> 所有 click 類操作統一使用 click_input()，符合設計理念
+> click() 使用 UIA Invoke Pattern 程式化觸發，適用於網頁或捲動區域內的控件；click_input() 使用物理滑鼠點擊，需元素在螢幕可視區域
 
 ### 動態配置與 logging
 

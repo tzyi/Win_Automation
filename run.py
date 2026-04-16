@@ -99,7 +99,7 @@ CONTROL_TYPE_MAP = {
 # 操作之間的預設等待時間 (秒)
 DEFAULT_WAIT = 0.3
 CONNECT_TIMEOUT = 10
-CONTROL_TIMEOUT = 3
+CONTROL_TIMEOUT = 10
 
 
 def parse_control_type(control_type_str: str) -> str:
@@ -133,12 +133,30 @@ def load_config(config_path: str = None) -> dict:
 def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
     """
     根據 Action 字串執行對應操作。
-    所有 click 類操作統一使用 click_input()。
+    click() 使用 UIA Invoke Pattern（程式化觸發，不依賴螢幕座標）。
+    click_input() 使用物理滑鼠點擊（需元素在螢幕可視區域）。
     若 value 不為空，則優先作為 type_keys / set_text / send_keys 的輸入內容。
     """
     action_lower = action_str.strip().lower()
 
-    if action_lower in ("click", "click()", "click_input", "click_input()"):
+    if action_lower in ("click", "click()"):
+        # 使用 UIA Invoke Pattern，不移動滑鼠，適用於不在螢幕可視區域的控件
+        try:
+            ctrl.invoke()
+        except Exception:
+            # 若 Invoke Pattern 不支援，降級為先捲動再物理點擊
+            logger.warning(f"invoke() 不支援，降級為 scroll + click_input(): '{control_name}'")
+            try:
+                ctrl.scroll_into_view()
+            except Exception:
+                pass
+            ctrl.click_input()
+    elif action_lower in ("click_input", "click_input()"):
+        # 物理滑鼠點擊，先嘗試捲動到可視區域
+        try:
+            ctrl.scroll_into_view()
+        except Exception:
+            pass
         ctrl.click_input()
     elif action_lower in ("double_click", "double_click_input", "double_click_input()"):
         ctrl.double_click_input()
@@ -185,13 +203,14 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
       1. title + control_type  (精確)
       2. title only            (忽略類型)
       3. title_re 正則局部匹配 (容忍空白/特殊字元差異)
+      4. 遍歷 descendants() 直接比對 (適用大型頁面 / 深層巢狀控件)
     找不到時印出所有可見控件清單以利除錯。
     """
 
     # --- 策略 1：精確搜尋 ---
     try:
         ctrl = dlg.child_window(title=control_name, control_type=control_type)
-        ctrl.wait("visible", timeout=CONTROL_TIMEOUT)
+        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
         logger.info(f"{step_label} 已找到控件 [精確]: '{control_name}' ({control_type})")
         return ctrl
     except Exception:
@@ -200,7 +219,7 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
     # --- 策略 2：僅用 title，不限類型 ---
     try:
         ctrl = dlg.child_window(title=control_name)
-        ctrl.wait("visible", timeout=CONTROL_TIMEOUT)
+        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
         logger.warning(f"{step_label} 已找到控件 [僅 title]: '{control_name}'（控件類型可能不同）")
         return ctrl
     except Exception:
@@ -210,14 +229,36 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
     try:
         pattern = re.escape(control_name)
         ctrl = dlg.child_window(title_re=pattern)
-        ctrl.wait("visible", timeout=CONTROL_TIMEOUT)
+        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
         logger.warning(f"{step_label} 已找到控件 [正則]: '{control_name}'")
         return ctrl
+    except Exception:
+        logger.warning(f"{step_label} 正則搜尋失敗，嘗試遍歷所有子控件 ...")
+
+    # --- 策略 4：遍歷 descendants() 直接比對 ---
+    try:
+        best_match = None
+        for child in dlg.descendants():
+            try:
+                txt = child.window_text()
+                if txt == control_name:
+                    ct = child.friendly_class_name()
+                    if ct == control_type:
+                        logger.warning(f"{step_label} 已找到控件 [遍歷精確]: '{control_name}' ({ct})")
+                        return child
+                    elif best_match is None:
+                        best_match = child
+            except Exception:
+                continue
+        if best_match is not None:
+            ct = best_match.friendly_class_name()
+            logger.warning(f"{step_label} 已找到控件 [遍歷]: '{control_name}' ({ct})")
+            return best_match
     except Exception:
         pass
 
     # --- 全部失敗：印出目前可見控件清單協助除錯 ---
-    logger.error(f"{step_label} 三種搜尋策略均失敗，列出目前所有可見控件：")
+    logger.error(f"{step_label} 四種搜尋策略均失敗，列出目前所有可見控件：")
     try:
         for i, child in enumerate(dlg.descendants()):
             try:
