@@ -151,12 +151,40 @@ Win_Automation/
 
 ### 可擴展操作
 
-- 雙擊
-- 右鍵點擊  
-- 拖拽和放置
-- 文本輸入
-- 滾動
-- 快捷鍵
+|方法|功能|備註|
+|-|-|-|
+|**click()**|發送滑鼠點擊訊息|不要求控制項可見|
+|**click\_input()**|使用滑鼠事件進行點擊|需要控制項在螢幕上可見，更貼近實際使用者操作|
+|**double\_click()**|雙擊|基於訊息|
+|**double\_click\_input()**|雙擊輸入|基於滑鼠事件|
+|**right\_click()**|右鍵點擊|基於訊息|
+|**right\_click\_input()**|右鍵點擊輸入|基於滑鼠事件|
+|**type\_keys(keys)**|發送鍵盤輸入|例如：`type\_keys("{TAB}")`, `type\_keys("{ENTER}")`|
+|**send\_message(msg)**|發送 Windows 訊息|進階用法|
+|**send\_message\_timeout()**|發送訊息並等待回應|可設定逾時時間|
+|**set\_focus()**|設定焦點|-|
+|**get\_focus()**|取得焦點|-|
+|**set\_window\_text(text)**|設定視窗文字|-|
+|**close()**|關閉視窗|-|
+|**close\_click()**|點擊關閉|執行額外延遲|
+|**drag\_mouse(dx, dy)**|拖動滑鼠|-|
+|**move\_mouse(x, y)**|移動滑鼠|-|
+|**press\_mouse()**|按下滑鼠按鍵|-|
+|**release\_mouse()**|放開滑鼠按鍵|-|
+|**press\_mouse\_input()**|按下滑鼠（基於事件）|-|
+|**release\_mouse\_input()**|放開滑鼠（基於事件）|-|
+|**maximize()**|最大化|-|
+|**minimize()**|最小化|-|
+|**restore()**|還原|-|
+|**get\_show\_state()**|取得顯示狀態|-|
+|**menu\_select(path)**|選擇菜單項目|-|
+|**notify\_menu\_select()**|通知菜單選擇|-|
+|**notify\_parent()**|通知父視窗|-|
+|**draw\_outline()**|繪製輪廓|用於視覺化|
+|**move\_window(x, y, width, height)**|移動與調整大小|-|
+|**rectangle**|取得矩形座標|屬性：.left, .top, .right, .bottom|
+|**children**|取得子視窗列表|-|
+
 
 ## 🔧 高級用法
 
