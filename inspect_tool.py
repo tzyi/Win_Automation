@@ -580,6 +580,10 @@ class InspectApp:
             side="right", padx=4
         )
 
+        ttk.Button(btn_frame, text="儲存設定檔", command=self._export_json).pack(
+            side="right", padx=4
+        )
+
         # --- 底部狀態列 ---
         self._status_var = tk.StringVar(value="就緒")
         status_bar = ttk.Label(
@@ -636,11 +640,7 @@ class InspectApp:
         self._var_name.set("—")
         self._var_type.set("—")
 
-        # 匯出 JSON
-        if self._captured:
-            self._export_json()
-        else:
-            self._status_var.set("未記錄任何元件，不產出檔案")
+        self._status_var.set("偵測已結束")
 
     # ========================================================
     # 滑鼠輪詢

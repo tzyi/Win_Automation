@@ -210,6 +210,23 @@ Win_Automation/
 |**children**|取得子視窗列表|-|
 
 
+### 鍵盤按鈕
+特殊鍵語法必須全大寫，常用範例：
+| 按鍵        | 正確寫法   |
+|------------|-----------|
+| Enter      | {ENTER}   |
+| Tab        | {TAB}     |
+| Escape     | {ESC}     |
+| Backspace  | {BACKSPACE} |
+| Delete     | {DELETE}  |
+| Ctrl+A     | ^a        |
+| Ctrl+C     | ^c        |
+| Ctrl+V     | ^v        |
+| Ctrl+X     | ^x        |
+| Ctrl+Z     | ^z        |
+
+
+
 ## 🔧 高級用法
 
 ### 常見控件類型
