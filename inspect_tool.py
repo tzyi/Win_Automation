@@ -1,5 +1,5 @@
 """
-UI 元素偵測工具 (inspect_tool.py)
+WinAutomation UI 元素偵測工具 (inspect_tool.py)
 ====================================
 類似 inspect.exe 的 Tkinter GUI 小工具，
 可即時偵測滑鼠下方的 UI 元素資訊，並匯出 set.json。
@@ -460,7 +460,7 @@ class EditDialog(tk.Toplevel):
 class InspectApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("UI 元素偵測工具")
+        self.root.title("WinAutomation")
         self.root.geometry("820x620")
         self.root.minsize(700, 500)
 
