@@ -11,7 +11,7 @@
         "Name": "",
         "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
         "Action": "send_keys()",
-        "value": "sadfsadgadbdfgbadfgafdsgsdfsda"
+        "value": "5424534534532"
     },
     "3": {
         "app": "未命名 - 記事本",
@@ -23,7 +23,7 @@
     "4": {
         "app": "未命名 - 記事本",
         "Name": "另存新檔",
-        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "ControlType": "UIA_MenuItemControlTypeId (0xC35B)",
         "Action": "click()",
         "value": ""
     },
@@ -32,7 +32,7 @@
         "Name": "檔案名稱:",
         "ControlType": "UIA_EditControlTypeId (0xC354)",
         "Action": "send_keys()",
-        "value": "testeee"
+        "value": "ad"
     },
     "6": {
         "app": "未命名 - 記事本",

@@ -101,6 +101,7 @@ CONTROL_TYPE_MAP = {
 DEFAULT_WAIT = 0.3
 CONNECT_TIMEOUT = 10
 CONTROL_TIMEOUT = 10
+QUICK_TIMEOUT = 2   # 多視窗遍歷降級時的短暫 timeout
 
 
 def parse_control_type(control_type_str: str) -> str:
@@ -196,6 +197,46 @@ def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
     else:
         logger.warning(f"未知的 Action '{action_str}'，預設使用 click_input()")
         ctrl.click_input()
+
+
+def quick_find_in_window(dlg, control_name: str, control_type: str) -> object:
+    """
+    快速在指定視窗中搜尋控件（短暫 timeout），用於多視窗遍歷降級。
+    找不到時拋出 RuntimeError。
+    """
+    if not control_name:
+        ctrl = dlg.child_window(control_type=control_type)
+        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+        return ctrl
+
+    # 策略 1：精確搜尋
+    try:
+        ctrl = dlg.child_window(title=control_name, control_type=control_type)
+        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+        return ctrl
+    except Exception:
+        pass
+
+    # 策略 2：僅用 title
+    try:
+        ctrl = dlg.child_window(title=control_name)
+        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+        return ctrl
+    except Exception:
+        pass
+
+    # 策略 3：遍歷 descendants 直接比對
+    try:
+        for child in dlg.descendants():
+            try:
+                if child.window_text() == control_name:
+                    return child
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    raise RuntimeError(f"quick_find: 找不到控件 '{control_name}'")
 
 
 def find_control(dlg, control_name: str, control_type: str, step_label: str):
@@ -377,7 +418,28 @@ def execute_steps(config: dict):
 
             # 尋找目標控件（多層降級搜尋）
             logger.info(f"{step_label} 正在尋找控件: '{control_name}' ...")
-            ctrl = find_control(dlg, control_name, control_type, step_label)
+            try:
+                ctrl = find_control(dlg, control_name, control_type, step_label)
+            except RuntimeError:
+                # 主視窗找不到（如自動完成下拉視窗遮蔽），嘗試遍歷應用程式所有視窗
+                logger.warning(f"{step_label} 主視窗找不到控件，嘗試遍歷所有視窗 ...")
+                ctrl = None
+                try:
+                    for alt_win in app.windows():
+                        try:
+                            if alt_win.handle == dlg.handle:
+                                continue
+                            ctrl = quick_find_in_window(alt_win, control_name, control_type)
+                            dlg = alt_win
+                            logger.info(f"{step_label} 已在替代視窗找到控件: '{control_name}'")
+                            break
+                        except Exception:
+                            continue
+                except Exception as enum_err:
+                    logger.warning(f"{step_label} 遍歷視窗時發生錯誤: {enum_err}")
+                if ctrl is None:
+                    logger.error(f"{step_label} 所有視窗均找不到控件: '{control_name}' (type={control_type})")
+                    raise RuntimeError(f"找不到控件: '{control_name}' (type={control_type})")
 
             # 執行操作
             logger.info(f"{step_label} 正在執行: {action} -> '{control_name}' (value='{value}')")
