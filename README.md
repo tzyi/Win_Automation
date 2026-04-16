@@ -1,103 +1,120 @@
+
 # Win_Automation
 
-> 🤖 Windows 桌面應用程序 GUI 自動化工具
+> 🤖 Windows 桌面應用 GUI 自動化框架
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 📖 簡介
+---
 
-**Win_Automation** 是一個強大的 Python 自動化框架，用於自動化操作 Windows 桌面應用程序的圖形界面。特別適合重複性任務自動化，如批量文件處理、數據輸入、工作流自動化等。
+## 📖 專案簡介
 
-本項目利用 Windows 原生的 **UI Automation (UIA)** 框架和 **pywinauto** 庫實現高效可靠的 UI 交互。
+**Win_Automation** 是一套基於 Python 與 pywinauto 的 Windows 桌面應用自動化框架，專為「低程式碼」自動化設計，所有操作流程皆由 JSON 配置檔驅動，無需修改程式即可快速調整自動化步驟。
 
-## ✨ 主要特性
+主要特色：
+- 支援多應用、多控件自動化（如 GeoTag Pro、檔案對話框、瀏覽器等）
+- 完整 logging，執行進度與錯誤即時顯示於終端機
+- 動態讀取 JSON 配置，流程調整零程式碼
+- 內建多層降級控件搜尋，提升穩定性
+- 支援多種 UI 操作（點擊、輸入、雙擊、右鍵等）
 
-- ✅ **簡單易用** - 基於配置文件的 JSON 驅動方式，無需複雜編程
-- ✅ **跨應用支持** - 可操作任何使用 UIA 框架的 Windows 應用
-- ✅ **靈活配置** - 通過 `exec.json` 管理所有 UI 元件信息
-- ✅ **可擴展操作** - 支持點擊、輸入、拖拽等多種交互方式
-- ✅ **智能延遲** - 自動處理應用響應時間
+---
 
 ## 🚀 快速開始
 
-### 前置要求
+### 1. 安裝環境
 
-- Python 3.7 或更高版本
-- Windows 10 / Windows 11
-- 管理員權限（部分應用需要）
-
-### 安裝
-
-1. **克隆此倉庫**
-   ```bash
-   git clone https://github.com/yourusername/Win_Automation.git
-   cd Win_Automation
-   ```
-
-2. **安裝依賴**
-   ```bash
-   pip install -r requirements.txt
-   ```
-   
-   或直接安裝 pywinauto：
-   ```bash
-   pip install pywinauto
-   ```
-
-### 基本使用
-
-#### 1️⃣ 探測 UI 元件
-
-使用 `doc/test.py` 掃描目標應用的 UI 控件：
-
-```python
-from pywinauto import Application
-
-app = Application(backend="uia").connect(title="你的應用標題")
-dlg = app.window(title="你的應用標題")
-
-# 列出所有控件信息
-for ctrl in dlg.descendants():
-    try:
-        print(f"標題: {ctrl.window_text()}")
-        print(f"控件類型: {ctrl.friendly_class_name()}")
-        print(f"自動化 ID: {getattr(ctrl, 'automation_id', None)}")
-        print("-" * 40)
-    except Exception as e:
-        print(f"錯誤: {e}")
+```bash
+pip install pywinauto
 ```
 
-#### 2️⃣ 配置 UI 元件
+### 2. 編輯自動化流程
 
-將要操作的 UI 元件信息添加到 `exec.json`：
+以 `case_01.json` 為例，每個步驟格式如下：
 
 ```json
 {
-    "1": {
-        "app": "應用標題",
-        "Name": "控件標題",
-        "ControlType": "Button"
-    },
-    "2": {
-        "app": "應用標題",
-        "Name": "另一個控件",
-        "ControlType": "ListItem"
-    }
+  "1": {
+    "app": "GeoTag Pro",
+    "Name": "folder_open 選擇照片",
+    "ControlType": "UIA_TextControlTypeId (0xC364)",
+    "Action": "click_input()",
+    "value": ""
+  },
+  ...
 }
 ```
 
-#### 3️⃣ 執行自動化
+欄位說明：
+- `app`：目標應用視窗標題
+- `Name`：控件名稱（顯示文字）
+- `ControlType`：控件類型（UIA_...ControlTypeId 或 pywinauto 名稱）
+- `Action`：執行動作（如 click_input()、send_keys()、set_text() 等）
+- `value`：輸入內容（如需）
+- `Wait`：本步驟結束後等待秒數（可選）
 
-運行生成的自動化腳本：
+### 3. 執行自動化
 
 ```bash
-python run.py
+python run.py --case case_01.json
 ```
 
-### 完整範例
+---
 
-以下是一個實際的自動化流程示例（基於 GeoTag Pro 照片管理應用）：
+## 📁 專案結構
+
+```
+Win_Automation/
+├── run.py              # 主自動化腳本（讀取 JSON 配置並執行）
+├── case_01.json        # 自動化流程範例設定檔（可自訂多組）
+├── CLAUDE.md           # 詳細技術文檔
+├── README.md           # 快速參考指南
+└── doc/
+    └── prompts.md      # 需求說明與設計理念
+```
+
+---
+
+## 🛠️ 核心設計理念
+
+- 所有流程皆由 JSON 配置檔驅動，無需修改程式
+- 控件搜尋採多層降級策略（title+type、title、正則模糊），失敗時自動列印所有可見控件協助排查
+- 支援多種 UI 操作（click_input、send_keys、set_text 等）
+- 完整 logging，執行進度、錯誤、控件搜尋策略皆即時顯示於終端機
+- 每步可自訂 Wait 秒數，確保 UI 響應
+- 執行失敗時自動停止流程，並顯示錯誤
+
+---
+
+## 🔍 常見問題排查
+
+| 問題 | 可能原因 | 解決方案 |
+|------|--------|--------|
+| 連接不到應用 | 標題不符或應用未啟動 | 檢查 app 名稱、確保應用已開啟 |
+| 找不到控件 | 名稱/類型錯誤或 UI 動態變化 | 用降級搜尋、列印控件清單協助排查 |
+| 操作無反應 | 控件未顯示或延遲不足 | 增加 Wait 秒數，確保 UI 完全載入 |
+| 權限不足 | 需管理員權限 | 以管理員身份執行 Python |
+
+---
+
+## 📚 進階說明
+
+- 詳細設計理念、pywinauto 操作範例、控件搜尋策略、最佳實踐請參閱 [CLAUDE.md](CLAUDE.md)
+- 參考 [pywinauto 官方文件](https://pywinauto.readthedocs.io/)
+- 參考 [Windows UI Automation](https://learn.microsoft.com/windows/win32/winauto/uiauto-intro)
+
+---
+
+## 🤝 貢獻與維護
+
+1. 測試新自動化流程，複製/調整 JSON 配置
+2. 如需擴充新操作，於 run.py 增加對應 Action 處理
+3. 更新本說明文件，確保內容與專案同步
+
+---
+
+**Made with ❤️ for Windows automation enthusiasts**
 
 ```python
 import time
