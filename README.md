@@ -82,12 +82,12 @@ python inspect_tool.py
 |方法|功能|備註|
 |-|-|-|
 |**click()**|發送滑鼠點擊訊息|不要求控制項可見|
-|**click\_input()**|使用滑鼠事件進行點擊|需要控制項在螢幕上可見，更貼近實際使用者操作|
+|⭐**click\_input()**|使用滑鼠事件進行點擊|需要控制項在螢幕上可見，更貼近實際使用者操作|
 |**double\_click()**|雙擊|基於訊息|
-|**double\_click\_input()**|雙擊輸入|基於滑鼠事件|
+|⭐**double\_click\_input()**|雙擊輸入|基於滑鼠事件|
 |**right\_click()**|右鍵點擊|基於訊息|
-|**right\_click\_input()**|右鍵點擊輸入|基於滑鼠事件|
-|**send\_keys(keys)**|發送鍵盤輸入|例如：`send\_keys("{TAB}")`, `send\_keys("{ENTER}")`|
+|⭐**right\_click\_input()**|右鍵點擊輸入|基於滑鼠事件|
+|⭐**send\_keys(keys)**|發送鍵盤輸入|例如：`send\_keys("{TAB}")`, `send\_keys("{ENTER}")`|
 |**send\_message(msg)**|發送 Windows 訊息|進階用法|
 |**send\_message\_timeout()**|發送訊息並等待回應|可設定逾時時間|
 |**set\_focus()**|設定焦點|-|
