@@ -1,0 +1,16 @@
+{
+    "1": {
+        "app": "WinDesk - 新分頁 - Google Chrome",
+        "Name": "網址與搜尋列",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "Action": "send_keys()",
+        "value": "https://www.hospital.fju.edu.tw/OPDSchedule{ENTER}"
+    },
+    "2": {
+        "app": "天主教輔仁大學附設醫院 - 依科部掛號 - Google Chrome",
+        "Name": "家庭醫學科",
+        "ControlType": "UIA_HyperlinkControlTypeId (0xC355)",
+        "Action": "click_input()",
+        "value": ""
+    }
+}
