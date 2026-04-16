@@ -25,9 +25,16 @@
 
 ### 1. 安裝環境
 
+
+#### 安裝套件
 ```bash
 pip install pywinauto
 ```
+
+#### 安裝Inspect.exe (Windows SDK for Windows 11)
+- [下載點](https://learn.microsoft.com/zh-tw/windows/apps/windows-sdk/downloads)
+- 只安裝「Windows SDK for Windows 11」中的「Windows SDK for Desktop C++ Apps」部分
+
 
 ### 2. 編輯自動化流程
 
