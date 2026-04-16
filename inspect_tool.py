@@ -18,7 +18,9 @@ import subprocess
 import sys
 import threading
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import messagebox, filedialog
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 # COM (隨 pywinauto 一起安裝)
 import comtypes
@@ -262,7 +264,7 @@ class CaptureDialog(tk.Toplevel):
         pad = dict(padx=8, pady=4)
 
         # --- 元件資訊（唯讀）---
-        info_frame = ttk.LabelFrame(self, text="元件資訊", padding=8)
+        info_frame = ttk.Labelframe(self, text="元件資訊", padding=8, bootstyle=INFO)
         info_frame.pack(fill="x", **pad)
 
         for i, (label, key) in enumerate(
@@ -279,7 +281,7 @@ class CaptureDialog(tk.Toplevel):
         info_frame.columnconfigure(1, weight=1)
 
         # --- Action ---
-        action_frame = ttk.LabelFrame(self, text="Action", padding=8)
+        action_frame = ttk.Labelframe(self, text="Action", padding=8, bootstyle=PRIMARY)
         action_frame.pack(fill="x", **pad)
 
         self._action_var = tk.StringVar(value=ACTION_OPTIONS[0])
@@ -293,14 +295,14 @@ class CaptureDialog(tk.Toplevel):
         action_combo.pack(anchor="w", fill="x")
 
         # --- Value ---
-        value_frame = ttk.LabelFrame(self, text="Value（選填）", padding=8)
+        value_frame = ttk.Labelframe(self, text="Value（選填）", padding=8, bootstyle=PRIMARY)
         value_frame.pack(fill="x", **pad)
 
         self._value_entry = ttk.Entry(value_frame, width=50)
         self._value_entry.pack(fill="x")
 
         # --- Wait ---
-        wait_frame = ttk.LabelFrame(self, text="Wait 等待秒數（選填）", padding=8)
+        wait_frame = ttk.Labelframe(self, text="Wait 等待秒數（選填）", padding=8, bootstyle=PRIMARY)
         wait_frame.pack(fill="x", **pad)
 
         self._wait_entry = ttk.Entry(wait_frame, width=20)
@@ -310,10 +312,10 @@ class CaptureDialog(tk.Toplevel):
         btn_frame = ttk.Frame(self, padding=8)
         btn_frame.pack(fill="x")
 
-        ttk.Button(btn_frame, text="確定", command=self._on_ok, width=10).pack(
+        ttk.Button(btn_frame, text="確定", command=self._on_ok, width=10, bootstyle=SUCCESS).pack(
             side="right", padx=4
         )
-        ttk.Button(btn_frame, text="取消", command=self._on_cancel, width=10).pack(
+        ttk.Button(btn_frame, text="取消", command=self._on_cancel, width=10, bootstyle=SECONDARY).pack(
             side="right", padx=4
         )
 
@@ -368,7 +370,7 @@ class EditDialog(tk.Toplevel):
         pad = dict(padx=8, pady=4)
 
         # --- 元件資訊（可編輯）---
-        info_frame = ttk.LabelFrame(self, text="元件資訊", padding=8)
+        info_frame = ttk.Labelframe(self, text="元件資訊", padding=8, bootstyle=INFO)
         info_frame.pack(fill="x", **pad)
 
         self._entries = {}
@@ -386,7 +388,7 @@ class EditDialog(tk.Toplevel):
         info_frame.columnconfigure(1, weight=1)
 
         # --- Action ---
-        action_frame = ttk.LabelFrame(self, text="Action", padding=8)
+        action_frame = ttk.Labelframe(self, text="Action", padding=8, bootstyle=PRIMARY)
         action_frame.pack(fill="x", **pad)
 
         current_action = element_info.get("Action", "")
@@ -406,7 +408,7 @@ class EditDialog(tk.Toplevel):
         action_combo.pack(anchor="w", fill="x")
 
         # --- Value ---
-        value_frame = ttk.LabelFrame(self, text="Value（選填）", padding=8)
+        value_frame = ttk.Labelframe(self, text="Value（選填）", padding=8, bootstyle=PRIMARY)
         value_frame.pack(fill="x", **pad)
 
         self._value_entry = ttk.Entry(value_frame, width=50)
@@ -414,7 +416,7 @@ class EditDialog(tk.Toplevel):
         self._value_entry.pack(fill="x")
 
         # --- Wait ---
-        wait_frame = ttk.LabelFrame(self, text="Wait 等待秒數（選填）", padding=8)
+        wait_frame = ttk.Labelframe(self, text="Wait 等待秒數（選填）", padding=8, bootstyle=PRIMARY)
         wait_frame.pack(fill="x", **pad)
 
         self._wait_entry = ttk.Entry(wait_frame, width=20)
@@ -427,10 +429,10 @@ class EditDialog(tk.Toplevel):
         btn_frame = ttk.Frame(self, padding=8)
         btn_frame.pack(fill="x")
 
-        ttk.Button(btn_frame, text="確定", command=self._on_ok, width=10).pack(
+        ttk.Button(btn_frame, text="確定", command=self._on_ok, width=10, bootstyle=SUCCESS).pack(
             side="right", padx=4
         )
-        ttk.Button(btn_frame, text="取消", command=self._on_cancel, width=10).pack(
+        ttk.Button(btn_frame, text="取消", command=self._on_cancel, width=10, bootstyle=SECONDARY).pack(
             side="right", padx=4
         )
 
@@ -471,11 +473,8 @@ class EditDialog(tk.Toplevel):
 # 主要 GUI 應用程式
 # ============================================================
 class InspectApp:
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root):
         self.root = root
-        self.root.title("WinAutomation")
-        self.root.geometry("820x620")
-        self.root.minsize(700, 500)
 
         self._inspector = UIAInspector()
         self._is_inspecting = False
@@ -515,30 +514,30 @@ class InspectApp:
         btn_bar.pack(fill="x")
 
         self._btn_start = ttk.Button(
-            btn_bar, text="開始偵測", command=self._start_inspect
+            btn_bar, text="開始偵測", command=self._start_inspect, bootstyle=SUCCESS
         )
         self._btn_start.pack(side="left", padx=4)
 
         self._btn_stop = ttk.Button(
-            btn_bar, text="結束偵測", command=self._stop_inspect, state="disabled"
+            btn_bar, text="結束偵測", command=self._stop_inspect, state="disabled", bootstyle=DANGER
         )
         self._btn_stop.pack(side="left", padx=4)
 
         ttk.Separator(btn_bar, orient="vertical").pack(side="left", fill="y", padx=6)
 
         ttk.Button(
-            btn_bar, text="載入設定檔", command=self._load_config
+            btn_bar, text="載入設定檔", command=self._load_config, bootstyle=(INFO, OUTLINE)
         ).pack(side="left", padx=4)
 
-        ttk.Label(btn_bar, text="快捷鍵: Ctrl+F1 記錄元件", foreground="gray").pack(
+        ttk.Label(btn_bar, text="快捷鍵: Ctrl+F1 記錄元件", bootstyle=SECONDARY).pack(
             side="right", padx=8
         )
 
         ttk.Separator(parent, orient="horizontal").pack(fill="x")
 
         # --- 即時元件資訊區 ---
-        info_frame = ttk.LabelFrame(
-            parent, text="當前滑鼠下方元件", padding=10
+        info_frame = ttk.Labelframe(
+            parent, text="當前滑鼠下方元件", padding=10, bootstyle=INFO
         )
         info_frame.pack(fill="x", padx=8, pady=(8, 4))
 
@@ -569,8 +568,8 @@ class InspectApp:
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
         # --- 已記錄元件列表 ---
-        list_frame = ttk.LabelFrame(
-            parent, text="已記錄的 UI 元件", padding=6
+        list_frame = ttk.Labelframe(
+            parent, text="已記錄的 UI 元件", padding=6, bootstyle=PRIMARY
         )
         list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
@@ -610,11 +609,11 @@ class InspectApp:
         btn_frame = ttk.Frame(parent, padding=6)
         btn_frame.pack(fill="x", padx=8, pady=4)
 
-        ttk.Button(btn_frame, text="全部清除", command=self._clear_all).pack(
+        ttk.Button(btn_frame, text="全部清除", command=self._clear_all, bootstyle=(DANGER, OUTLINE)).pack(
             side="right", padx=4
         )
 
-        ttk.Button(btn_frame, text="儲存設定檔", command=self._export_json).pack(
+        ttk.Button(btn_frame, text="儲存設定檔", command=self._export_json, bootstyle=(SUCCESS, OUTLINE)).pack(
             side="right", padx=4
         )
 
@@ -635,7 +634,7 @@ class InspectApp:
     def _build_runner_tab(self, parent):
         """建構「執行工具」分頁"""
         # --- 設定檔選擇區 ---
-        config_frame = ttk.LabelFrame(parent, text="設定檔", padding=8)
+        config_frame = ttk.Labelframe(parent, text="設定檔", padding=8, bootstyle=INFO)
         config_frame.pack(fill="x", padx=8, pady=(8, 4))
 
         ttk.Label(config_frame, text="設定檔路徑:").pack(side="left", padx=(0, 4))
@@ -647,7 +646,7 @@ class InspectApp:
         config_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         ttk.Button(
-            config_frame, text="瀏覽...", command=self._browse_runner_config
+            config_frame, text="瀏覽...", command=self._browse_runner_config, bootstyle=(INFO, OUTLINE)
         ).pack(side="left", padx=4)
 
         # --- 執行控制區 ---
@@ -655,19 +654,19 @@ class InspectApp:
         exec_frame.pack(fill="x", padx=8)
 
         self._btn_execute = ttk.Button(
-            exec_frame, text="▶ 執行自動化", command=self._run_automation
+            exec_frame, text="▶ 執行自動化", command=self._run_automation, bootstyle=SUCCESS
         )
         self._btn_execute.pack(side="left", padx=4)
 
         self._runner_status_var = tk.StringVar(value="就緒")
         ttk.Label(
-            exec_frame, textvariable=self._runner_status_var, foreground="gray"
+            exec_frame, textvariable=self._runner_status_var, bootstyle=SECONDARY
         ).pack(side="left", padx=8)
 
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
         # --- Log 輸出區 ---
-        log_frame = ttk.LabelFrame(parent, text="執行記錄", padding=6)
+        log_frame = ttk.Labelframe(parent, text="執行記錄", padding=6, bootstyle=PRIMARY)
         log_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
         self._log_text = tk.Text(
@@ -687,7 +686,7 @@ class InspectApp:
         bottom_frame.pack(fill="x", padx=8, pady=4)
 
         ttk.Button(
-            bottom_frame, text="清除記錄", command=self._clear_log
+            bottom_frame, text="清除記錄", command=self._clear_log, bootstyle=(DANGER, OUTLINE)
         ).pack(side="right", padx=4)
 
     # ========================================================
@@ -1109,7 +1108,7 @@ class InspectApp:
 # 程式進入點
 # ============================================================
 def main():
-    root = tk.Tk()
+    root = ttk.Window(themename="darkly", title="WinAutomation", size=(1200, 900), minsize=(1200, 900))
     app = InspectApp(root)
     root.protocol("WM_DELETE_WINDOW", app.on_close)
     root.mainloop()
