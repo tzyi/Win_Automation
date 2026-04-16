@@ -158,7 +158,7 @@ def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
         except Exception:
             pass
         ctrl.click_input()
-    elif action_lower in ("double_click", "double_click_input", "double_click_input()"):
+    elif action_lower in ("double_click", "double_click()", "double_click_input", "double_click_input()"):
         ctrl.double_click_input()
     elif action_lower in ("right_click", "right_click_input", "right_click_input()"):
         ctrl.right_click_input()
