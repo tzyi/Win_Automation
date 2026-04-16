@@ -259,9 +259,14 @@ def execute_steps(config: dict):
 
 
 def main():
+    start_time = time.time()
     logger.info("Win_Automation 啟動")
     config = load_config()
     execute_steps(config)
+    elapsed = time.time() - start_time
+    minutes = int(elapsed // 60)
+    seconds = int(elapsed % 60)
+    logger.info(f"總共花費時間: {minutes:02d}分{seconds:02d}秒")
     logger.info("Win_Automation 結束")
 
 
