@@ -2,16 +2,25 @@
     "1": {
         "app": "GeoTag Pro",
         "Name": "folder_open 選擇照片",
-        "ControlType": "UIA_TextControlTypeId (0xC364)"
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "Action": "Click"
     },
     "2": {
         "app": "開啟",
         "Name": "IMG_4301.JPG",
-        "ControlType": "UIA_ListItemControlTypeId (0xC357)"
+        "ControlType": "UIA_ListItemControlTypeId (0xC357)",
+        "Action": "click_input()"
     },
     "3": {
         "app": "開啟",
         "Name": "開啟(O)",
-        "ControlType": "UIA_SplitButtonControlTypeId (0xC36F)"
+        "ControlType": "UIA_SplitButtonControlTypeId (0xC36F)",
+        "Action": "click_input()"
+    },
+    "4": {
+        "app": "GeoTag Pro",
+        "Name": "清除所有照片",
+        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
+        "Action": "click_input()"
     }
 }
