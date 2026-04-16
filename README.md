@@ -139,6 +139,7 @@ python inspect_tool.py
 ```
 Win_Automation/
 ├── run.py                # 主自動化腳本
+├── handler.py            # 自訂 Handler 模組（handle 邏輯集中管理）
 ├── inspect_tool.py       # 控件檢查工具
 ├── requirements.txt      # Python 依賴列表
 ├── CLAUDE.md             # 詳細技術文檔（推薦閱讀）
@@ -151,6 +152,50 @@ Win_Automation/
 │   ├── prompts.md        # 需求說明與設計理念
 │   └── inspect-spec.md   # 控件檢查規範
 └── img/                  # 文檔圖片
+```
+
+---
+
+## 🪝 Handler 機制
+
+**Handler** 是在執行實際 UI 操作 **前** 自動呼叫的自訂邏輯，可對 `value` 進行預處理。  
+在 JSON 配置中以 `"handle"` 欄位指定，無需修改主程式。
+
+```json
+{
+  "app": "Notepad",
+  "Name": "檔案名稱",
+  "ControlType": "UIA_EditControlTypeId",
+  "Action": "set_text()",
+  "value": "MyReport",
+  "handle": "check_file_name()"
+}
+```
+
+所有 Handler 定義於 `handler.py`，如需新增自訂 Handler，在該檔案實作函數後，
+加入 `HANDLE_REGISTRY` 字典即可直接在 JSON 中引用。
+
+### 內建 Handler 清單
+
+| Handler 名稱 | 說明 | 適用情境 |
+|-------------|------|---------|
+| `check_file_name()` | 檢查目標資料夾是否已存在同名檔案，若重複則自動在檔名後附加時間戳 `_YYYYMMDD_HHMMSS` | 「另存新檔」對話框的檔名輸入框，防止覆蓋舊檔 |
+
+#### `check_file_name()` 詳細說明
+
+- **自動偵測資料夾路徑**：從檔案對話框的地址列（ToolBar / SplitButton）讀取當前存檔路徑，支援完整路徑、本地化顯示名稱（繁中 / 簡中 / 英文）及麵包屑格式
+- **副檔名自動補全**：嘗試從「存檔類型」下拉選單取得副檔名（如 `*.txt`、`*.csv`）
+- **無衝突時維持原名**：只有在偵測到同名檔案時才加上時間戳，否則直接回傳原始 `value`
+
+```json
+{
+  "app": "另存新檔",
+  "Name": "File name:",
+  "ControlType": "UIA_EditControlTypeId",
+  "Action": "set_text()",
+  "value": "report",
+  "handle": "check_file_name()"
+}
 ```
 
 ---
@@ -192,7 +237,8 @@ Win_Automation/
 
 1. 測試新自動化流程，複製/調整 JSON 配置檔
 2. 如需擴充新操作，於 `run.py` 增加對應 Action 處理
-3. 更新文檔保持內容與專案同步
+3. 如需新增自訂 Handle 邏輯，於 `handler.py` 實作函數並加入 `HANDLE_REGISTRY`
+4. 更新文檔保持內容與專案同步
 
 ---
 
