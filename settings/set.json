@@ -12,5 +12,40 @@
         "ControlType": "UIA_HyperlinkControlTypeId (0xC355)",
         "Action": "click()",
         "value": ""
+    },
+    "3": {
+        "app": "天主教輔仁大學附設醫院 - 依科部掛號 - Google Chrome",
+        "Name": "林嘉俊 [255] 含三高整合門診 可以預約 網路掛號至第126號",
+        "ControlType": "UIA_HyperlinkControlTypeId (0xC355)",
+        "Action": "click()",
+        "value": ""
+    },
+    "4": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "身分證字號：(或病歷號碼)",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "Action": "send_keys()",
+        "value": "Fxxxxxx"
+    },
+    "5": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "年",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "Action": "send_keys()",
+        "value": "1995"
+    },
+    "6": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "月",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "Action": "send_keys()",
+        "value": "4"
+    },
+    "7": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "日",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "Action": "send_keys()",
+        "value": "8"
     }
 }
