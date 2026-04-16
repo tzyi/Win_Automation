@@ -14,6 +14,7 @@ import ctypes
 import ctypes.wintypes
 import json
 import os
+import subprocess
 import sys
 import threading
 import tkinter as tk
@@ -460,8 +461,8 @@ class InspectApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("UI 元素偵測工具")
-        self.root.geometry("780x560")
-        self.root.minsize(640, 440)
+        self.root.geometry("820x620")
+        self.root.minsize(700, 500)
 
         self._inspector = UIAInspector()
         self._is_inspecting = False
@@ -469,6 +470,7 @@ class InspectApp:
         self._hotkey_listener: HotkeyListener | None = None
         self._captured: list[dict] = []  # 已記錄的元件
         self._current_info: dict | None = None  # 目前滑鼠下方的元件資訊
+        self._runner_process = None  # 執行中的子程序
 
         self._build_gui()
 
@@ -476,8 +478,27 @@ class InspectApp:
     # GUI 建構
     # ========================================================
     def _build_gui(self):
+        # --- 分頁 Notebook ---
+        self._notebook = ttk.Notebook(self.root)
+        self._notebook.pack(fill="both", expand=True)
+
+        # --- 分頁 1: 偵測工具 ---
+        inspect_frame = ttk.Frame(self._notebook)
+        self._notebook.add(inspect_frame, text=" 偵測工具 ")
+        self._build_inspect_tab(inspect_frame)
+
+        # --- 分頁 2: 執行工具 ---
+        runner_frame = ttk.Frame(self._notebook)
+        self._notebook.add(runner_frame, text=" 執行工具 ")
+        self._build_runner_tab(runner_frame)
+
+    # ========================================================
+    # 偵測工具分頁
+    # ========================================================
+    def _build_inspect_tab(self, parent):
+        """建構「偵測工具」分頁"""
         # --- 頂部按鈕列 ---
-        btn_bar = ttk.Frame(self.root, padding=6)
+        btn_bar = ttk.Frame(parent, padding=6)
         btn_bar.pack(fill="x")
 
         self._btn_start = ttk.Button(
@@ -500,11 +521,11 @@ class InspectApp:
             side="right", padx=8
         )
 
-        ttk.Separator(self.root, orient="horizontal").pack(fill="x")
+        ttk.Separator(parent, orient="horizontal").pack(fill="x")
 
         # --- 即時元件資訊區 ---
         info_frame = ttk.LabelFrame(
-            self.root, text="當前滑鼠下方元件", padding=10
+            parent, text="當前滑鼠下方元件", padding=10
         )
         info_frame.pack(fill="x", padx=8, pady=(8, 4))
 
@@ -532,13 +553,13 @@ class InspectApp:
 
         info_frame.columnconfigure(1, weight=1)
 
-        ttk.Separator(self.root, orient="horizontal").pack(fill="x", pady=4)
+        ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
         # --- 已記錄元件列表 ---
         list_frame = ttk.LabelFrame(
-            self.root, text="已記錄的 UI 元件", padding=6
+            parent, text="已記錄的 UI 元件", padding=6
         )
-        list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+        list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
         columns = ("step", "app", "name", "type", "action", "value")
         self._tree = ttk.Treeview(
@@ -573,7 +594,7 @@ class InspectApp:
         self._tree.bind("<Double-1>", lambda e: self._edit_selected())
 
         # --- 操作按鈕區 ---
-        btn_frame = ttk.Frame(self.root, padding=6)
+        btn_frame = ttk.Frame(parent, padding=6)
         btn_frame.pack(fill="x", padx=8, pady=4)
 
         ttk.Button(btn_frame, text="全部清除", command=self._clear_all).pack(
@@ -587,13 +608,74 @@ class InspectApp:
         # --- 底部狀態列 ---
         self._status_var = tk.StringVar(value="就緒")
         status_bar = ttk.Label(
-            self.root,
+            parent,
             textvariable=self._status_var,
             relief="sunken",
             anchor="w",
             padding=(8, 2),
         )
         status_bar.pack(fill="x", side="bottom")
+
+    # ========================================================
+    # 執行工具分頁
+    # ========================================================
+    def _build_runner_tab(self, parent):
+        """建構「執行工具」分頁"""
+        # --- 設定檔選擇區 ---
+        config_frame = ttk.LabelFrame(parent, text="設定檔", padding=8)
+        config_frame.pack(fill="x", padx=8, pady=(8, 4))
+
+        ttk.Label(config_frame, text="設定檔路徑:").pack(side="left", padx=(0, 4))
+
+        self._runner_config_var = tk.StringVar()
+        config_entry = ttk.Entry(
+            config_frame, textvariable=self._runner_config_var, width=50
+        )
+        config_entry.pack(side="left", fill="x", expand=True, padx=4)
+
+        ttk.Button(
+            config_frame, text="瀏覽...", command=self._browse_runner_config
+        ).pack(side="left", padx=4)
+
+        # --- 執行控制區 ---
+        exec_frame = ttk.Frame(parent, padding=6)
+        exec_frame.pack(fill="x", padx=8)
+
+        self._btn_execute = ttk.Button(
+            exec_frame, text="▶ 執行自動化", command=self._run_automation
+        )
+        self._btn_execute.pack(side="left", padx=4)
+
+        self._runner_status_var = tk.StringVar(value="就緒")
+        ttk.Label(
+            exec_frame, textvariable=self._runner_status_var, foreground="gray"
+        ).pack(side="left", padx=8)
+
+        ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
+
+        # --- Log 輸出區 ---
+        log_frame = ttk.LabelFrame(parent, text="執行記錄", padding=6)
+        log_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
+
+        self._log_text = tk.Text(
+            log_frame, wrap="word", state="disabled",
+            font=("Consolas", 9), bg="#1e1e1e", fg="#cccccc",
+            insertbackground="#cccccc",
+        )
+        log_scrollbar = ttk.Scrollbar(
+            log_frame, orient="vertical", command=self._log_text.yview
+        )
+        self._log_text.configure(yscrollcommand=log_scrollbar.set)
+        self._log_text.pack(side="left", fill="both", expand=True)
+        log_scrollbar.pack(side="right", fill="y")
+
+        # --- 底部按鈕區 ---
+        bottom_frame = ttk.Frame(parent, padding=6)
+        bottom_frame.pack(fill="x", padx=8, pady=4)
+
+        ttk.Button(
+            bottom_frame, text="清除記錄", command=self._clear_log
+        ).pack(side="right", padx=4)
 
     # ========================================================
     # 開始 / 結束偵測
@@ -882,6 +964,98 @@ class InspectApp:
         messagebox.showinfo("匯出成功", f"已成功匯出 {len(self._captured)} 個元件至:\n{filepath}")
 
     # ========================================================
+    # 執行工具：瀏覽 / 執行 / Log
+    # ========================================================
+    def _browse_runner_config(self):
+        """瀏覽並選擇設定檔"""
+        default_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = filedialog.askopenfilename(
+            title="選擇設定檔",
+            initialdir=default_dir,
+            defaultextension=".json",
+            filetypes=[("JSON 檔案", "*.json"), ("所有檔案", "*.*")],
+        )
+        if filepath:
+            self._runner_config_var.set(filepath)
+
+    def _run_automation(self):
+        """在背景執行 run.py"""
+        config_path = self._runner_config_var.get().strip()
+        if not config_path:
+            messagebox.showwarning("提示", "請先選擇設定檔")
+            return
+        if not os.path.isfile(config_path):
+            messagebox.showerror("錯誤", f"找不到設定檔:\n{config_path}")
+            return
+
+        # 鎖定執行按鈕
+        self._btn_execute.configure(state="disabled")
+        self._runner_status_var.set("執行中...")
+
+        # 清空 Log
+        self._log_text.configure(state="normal")
+        self._log_text.delete("1.0", "end")
+        self._log_text.configure(state="disabled")
+
+        # 啟動子程序
+        run_py = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "run.py"
+        )
+        self._runner_process = subprocess.Popen(
+            [sys.executable, run_py, "--case", config_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+        )
+
+        # 背景執行緒讀取輸出
+        thread = threading.Thread(target=self._read_process_output, daemon=True)
+        thread.start()
+
+    def _read_process_output(self):
+        """背景執行緒：逐行讀取子程序輸出"""
+        try:
+            for line in self._runner_process.stdout:
+                self.root.after(0, self._append_log, line)
+            self._runner_process.wait()
+        except Exception as e:
+            self.root.after(0, self._append_log, f"\n錯誤: {e}\n")
+        returncode = self._runner_process.returncode
+        self.root.after(0, self._on_process_done, returncode)
+
+    def _append_log(self, text):
+        """將文字附加到 Log 區域"""
+        self._log_text.configure(state="normal")
+        self._log_text.insert("end", text)
+        self._log_text.see("end")
+        self._log_text.configure(state="disabled")
+
+    def _on_process_done(self, returncode):
+        """子程序結束時的回呼"""
+        self._btn_execute.configure(state="normal")
+        self._runner_process = None
+
+        if returncode == 0:
+            self._runner_status_var.set("執行完成")
+            self._append_log("\n===== 執行完成 =====\n")
+            messagebox.showinfo("完成", "自動化流程已執行完成！")
+        else:
+            self._runner_status_var.set(f"執行失敗 (代碼: {returncode})")
+            self._append_log(f"\n===== 執行失敗 (代碼: {returncode}) =====\n")
+            messagebox.showerror(
+                "錯誤",
+                f"自動化流程執行失敗！\n返回代碼: {returncode}\n\n請查看執行記錄了解詳情。",
+            )
+
+    def _clear_log(self):
+        """清除 Log 輸出區"""
+        self._log_text.configure(state="normal")
+        self._log_text.delete("1.0", "end")
+        self._log_text.configure(state="disabled")
+
+    # ========================================================
     # 視窗關閉
     # ========================================================
     def on_close(self):
@@ -891,6 +1065,8 @@ class InspectApp:
                 self.root.after_cancel(self._poll_id)
             if self._hotkey_listener:
                 self._hotkey_listener.stop()
+        if self._runner_process is not None:
+            self._runner_process.terminate()
         self.root.destroy()
 
 
