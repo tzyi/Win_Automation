@@ -78,9 +78,9 @@ CONTROL_TYPE_MAP = {
 }
 
 # 操作之間的預設等待時間 (秒)
-DEFAULT_WAIT = 1.0
+DEFAULT_WAIT = 0.3
 CONNECT_TIMEOUT = 10
-CONTROL_TIMEOUT = 10
+CONTROL_TIMEOUT = 3
 
 
 def parse_control_type(control_type_str: str) -> str:
@@ -208,6 +208,9 @@ def execute_steps(config: dict):
     logger.info(f"開始執行自動化流程，共 {total} 個步驟")
     logger.info("=" * 60)
 
+    # 快取已連線的 app，避免相同視窗重複 connect()
+    app_cache: dict = {}
+
     for idx, key in enumerate(sorted_keys, start=1):
         step = config[key]
         app_title = step["app"]
@@ -225,13 +228,18 @@ def execute_steps(config: dict):
         logger.info(f"  執行動作 : {action}")
 
         try:
-            # 連接到目標應用程式
-            logger.info(f"{step_label} 正在連接應用程式: {app_title} ...")
-            app = Application(backend="uia").connect(
-                title=app_title, timeout=CONNECT_TIMEOUT
-            )
+            # 連接到目標應用程式（快取複用，避免重複 connect）
+            if app_title not in app_cache:
+                logger.info(f"{step_label} 正在連接應用程式: {app_title} ...")
+                app = Application(backend="uia").connect(
+                    title=app_title, timeout=CONNECT_TIMEOUT
+                )
+                app_cache[app_title] = app
+                logger.info(f"{step_label} 已連接到: {app_title}")
+            else:
+                app = app_cache[app_title]
+                logger.info(f"{step_label} 複用已連線的應用程式: {app_title}")
             dlg = app.window(title=app_title)
-            logger.info(f"{step_label} 已連接到: {app_title}")
 
             # 尋找目標控件（多層降級搜尋）
             logger.info(f"{step_label} 正在尋找控件: '{control_name}' ...")
