@@ -360,7 +360,20 @@ def execute_steps(config: dict):
             else:
                 app = app_cache[app_title]
                 logger.info(f"{step_label} 複用已連線的應用程式: {app_title}")
+
+            # 取得視窗：先精確比對標題，若失敗則局部匹配（如記事本輸入後標題加 *），
+            # 最終降級為 top_window()
             dlg = app.window(title=app_title)
+            try:
+                dlg.wrapper_object()
+            except Exception:
+                try:
+                    dlg = app.window(title_re=f".*{re.escape(app_title)}.*")
+                    dlg.wrapper_object()
+                    logger.info(f"{step_label} 視窗標題已變更，已透過局部匹配重新找到視窗")
+                except Exception:
+                    dlg = app.top_window()
+                    logger.info(f"{step_label} 使用 top_window() 作為視窗降級")
 
             # 尋找目標控件（多層降級搜尋）
             logger.info(f"{step_label} 正在尋找控件: '{control_name}' ...")

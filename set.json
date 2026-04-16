@@ -12,5 +12,33 @@
         "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
         "Action": "send_keys()",
         "value": "sadfsadgadbdfgbadfgafdsgsdfsda"
+    },
+    "3": {
+        "app": "未命名 - 記事本",
+        "Name": "檔案",
+        "ControlType": "UIA_MenuItemControlTypeId (0xC35B)",
+        "Action": "click()",
+        "value": ""
+    },
+    "4": {
+        "app": "未命名 - 記事本",
+        "Name": "另存新檔",
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "Action": "click()",
+        "value": ""
+    },
+    "5": {
+        "app": "未命名 - 記事本",
+        "Name": "檔案名稱:",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "Action": "send_keys()",
+        "value": "testeee"
+    },
+    "6": {
+        "app": "未命名 - 記事本",
+        "Name": "存檔(S)",
+        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
+        "Action": "click()",
+        "value": ""
     }
 }
