@@ -38,7 +38,9 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. 檢查和編輯自動化配置
+#### 安裝Inspect.exe (Windows SDK for Windows 11)
+- [下載點](https://learn.microsoft.com/zh-tw/windows/apps/windows-sdk/downloads)
+- 只安裝「Windows SDK for Windows 11」中的「Windows SDK for Desktop C++ Apps」部分
 
 配置檔案位於 `settings/` 資料夾，例如 `settings/case_01.json`：
 
@@ -65,11 +67,71 @@ pip install -r requirements.txt
 | `value` | 輸入內容（可選） |
 | `Wait` | 步驟完成後等待秒數（可選） |
 
-### 3. 執行自動化
+### 2. 執行程式
 
 ```bash
-python run.py --case case_01.json
+python inspect_tool.py
 ```
+
+
+
+### 3. 當前支持操作
+
+#### UI 操作
+
+|方法|功能|備註|
+|-|-|-|
+|**click()**|發送滑鼠點擊訊息|不要求控制項可見|
+|**click\_input()**|使用滑鼠事件進行點擊|需要控制項在螢幕上可見，更貼近實際使用者操作|
+|**double\_click()**|雙擊|基於訊息|
+|**double\_click\_input()**|雙擊輸入|基於滑鼠事件|
+|**right\_click()**|右鍵點擊|基於訊息|
+|**right\_click\_input()**|右鍵點擊輸入|基於滑鼠事件|
+|**set\_keys(keys)**|發送鍵盤輸入|例如：`set\_keys("{TAB}")`, `set\_keys("{ENTER}")`|
+|**send\_message(msg)**|發送 Windows 訊息|進階用法|
+|**send\_message\_timeout()**|發送訊息並等待回應|可設定逾時時間|
+|**set\_focus()**|設定焦點|-|
+|**get\_focus()**|取得焦點|-|
+|**set\_window\_text(text)**|設定視窗文字|-|
+|**close()**|關閉視窗|-|
+|**close\_click()**|點擊關閉|執行額外延遲|
+|**drag\_mouse(dx, dy)**|拖動滑鼠|-|
+|**move\_mouse(x, y)**|移動滑鼠|-|
+|**press\_mouse()**|按下滑鼠按鍵|-|
+|**release\_mouse()**|放開滑鼠按鍵|-|
+|**press\_mouse\_input()**|按下滑鼠（基於事件）|-|
+|**release\_mouse\_input()**|放開滑鼠（基於事件）|-|
+|**maximize()**|最大化|-|
+|**minimize()**|最小化|-|
+|**restore()**|還原|-|
+|**get\_show\_state()**|取得顯示狀態|-|
+|**menu\_select(path)**|選擇菜單項目|-|
+|**notify\_menu\_select()**|通知菜單選擇|-|
+|**notify\_parent()**|通知父視窗|-|
+|**draw\_outline()**|繪製輪廓|用於視覺化|
+|**move\_window(x, y, width, height)**|移動與調整大小|-|
+|**rectangle**|取得矩形座標|屬性：.left, .top, .right, .bottom|
+|**children**|取得子視窗列表|-|
+
+
+#### 鍵盤按鈕
+特殊鍵語法必須全大寫，常用範例：
+| 按鍵        | 正確寫法   |
+|------------|-----------|
+| Enter      | {ENTER}   |
+| Tab        | {TAB}     |
+| Escape     | {ESC}     |
+| Backspace  | {BACKSPACE} |
+| Delete     | {DELETE}  |
+| Ctrl+A     | ^a        |
+| Ctrl+C     | ^c        |
+| Ctrl+V     | ^v        |
+| Ctrl+X     | ^x        |
+| Ctrl+Z     | ^z        |
+
+
+
+
 
 ---
 
@@ -104,27 +166,6 @@ Win_Automation/
 3. **正則模糊**：title 正則比對（容忍空白/特殊字元差異）
 4. **診斷模式**：失敗時自動列出所有可見控件協助除錯
 
-### 支援的操作類型
-
-| 操作 | 說明 |
-|-----|------|
-| `click_input()` | 左鍵點擊 |
-| `double_click_input()` | 雙擊 |
-| `right_click_input()` | 右鍵點擊 |
-| `send_keys(keys)` | 發送鍵盤輸入 |
-| `set_text(text)` | 直接設值（輸入框） |
-| `type_keys(keys)` | 鍵盤輸入（同 send_keys） |
-
-**常用鍵盤特殊鍵** (需大寫)
-| 按鍵 | 寫法 |
-|-----|------|
-| Enter | {ENTER} |
-| Tab | {TAB} |
-| Escape | {ESC} |
-| Delete | {DELETE} |
-| Ctrl+A | ^a |
-| Ctrl+C | ^c |
-| Ctrl+V | ^v |
 
 ---
 
@@ -148,16 +189,6 @@ Win_Automation/
 
 ---
 
-## 🐛 調試與排查
-
-使用 `inspect_tool.py` 檢查應用中的可用控件：
-
-```bash
-python inspect_tool.py
-```
-
----
-
 ## 🤝 貢獻與維護
 
 1. 測試新自動化流程，複製/調整 JSON 配置檔
@@ -165,6 +196,144 @@ python inspect_tool.py
 3. 更新文檔保持內容與專案同步
 
 ---
+
+
+### 文件說明
+
+| 文件 | 用途 |
+|------|------|
+| `run.py` | 根據 `exec.json` 配置生成的自動化執行腳本 |
+| `exec.json` | 定義要操作的 UI 元件（應用標題、控件名稱、控件類型） |
+| `doc/test.py` | 用於掃描和列出應用中所有可用控件的調試工具 |
+| `doc/prompts.md` | 記錄自動化任務需求和工作流說明 |
+
+
+
+## 🔧 高級用法
+
+### 常見控件類型
+
+```
+Button          - 按鈕
+Text            - 文本框
+ListItem        - 列表項
+SplitButton     - 分割按鈕
+Window          - 窗口
+ComboBox        - 組合框
+CheckBox        - 複選框
+Edit            - 編輯框
+```
+
+### 時間延遲管理
+
+合理控制延遲時間以確保 UI 元件完全加載：
+
+```python
+import time
+
+# 短延遲 (0.5s) - 快速響應的 UI 元素
+time.sleep(0.5)
+
+# 中延遲 (1s) - 對話框或窗口打開
+time.sleep(1)
+
+# 長延遲 (2s+) - 應用加載或複雜操作
+time.sleep(2)
+```
+
+### 查找控件的多種方式
+
+```python
+# 按標題查找
+ctrl = dlg.child_window(title="按鈕標題", control_type="Button")
+
+# 按自動化 ID 查找
+ctrl = dlg.child_window(automation_id="btnOK", control_type="Button")
+
+# 使用正則表達式
+import re
+ctrl = dlg.child_window(title_re=r"確定.*", control_type="Button")
+
+# 查找所有子元素
+for ctrl in dlg.descendants():
+    print(ctrl.window_text())
+```
+
+## 🐛 常見問題排查
+
+| 問題 | 可能原因 | 解決方案 |
+|------|--------|--------|
+| 無法連接到應用 | 應用未運行或標題不匹配 | 檢查應用標題，可用 `test.py` 確認 |
+| FindingElement timeout | 控件不存在或隱藏 | 增加延遲時間或確認控件屬性 |
+| Access Denied | 權限不足 | 以管理員身份運行 Python 或 IDE |
+| 操作無響應 | 應用未響應或被遮擋 | 保持應用在前景，檢查應用狀態 |
+| 控件未找到 | 控件名稱或類型錯誤 | 使用 `test.py` 列出正確的屬性 |
+
+## 📚 詳細文檔
+
+- **[CLAUDE.md](CLAUDE.md)** - 完整技術文檔、最佳實踐和深度教程
+- **[官方 pywinauto 文檔](https://pywinauto.readthedocs.io/)**
+- **[Windows UI Automation](https://docs.microsoft.com/windows/win32/winauto/uiauto-intro)**
+
+## 💡 使用範例
+
+### 範例 1：批量文件處理
+
+```python
+import time
+from pywinauto import Application
+
+app = Application(backend="uia").connect(title="應用名稱")
+dlg = app.window(title="應用名稱")
+
+# 循環處理多個文件
+files = ["文件1.txt", "文件2.txt", "文件3.txt"]
+for file in files:
+    dlg.child_window(title="開啟", control_type="Button").click()
+    time.sleep(1)
+    
+    # 選擇文件
+    dlg.child_window(title=file, control_type="ListItem").click()
+    dlg.child_window(title="確定", control_type="Button").click()
+    
+    time.sleep(0.5)
+```
+
+### 範例 2：數據輸入工作流
+
+```python
+import time
+from pywinauto import Application
+
+app = Application(backend="uia").connect(title="表單應用")
+dlg = app.window(title="表單應用")
+
+# 輸入數據
+dlg.child_window(control_type="Edit", top_level_only=False).type_keys("輸入內容")
+time.sleep(0.3)
+
+# 提交表單
+dlg.child_window(title="提交", control_type="Button").click()
+```
+
+## 🎯 最佳實踐
+
+1. **始終使用管理員權限** - 某些應用需要提升權限
+2. **合理設置延遲** - 避免過短導致超時或過長導致緩慢
+3. **錯誤處理** - 添加 try-catch 捕獲異常
+4. **使用相對定位** - 優先使用標題而非座標
+5. **保持應用前景** - 調試時將應用窗口置於前景
+6. **記錄操作日誌** - 便於問題排查和維護
+
+## 🤝 貢獻指南
+
+歡迎提交改進建議！請遵循以下流程：
+
+1. Fork 本倉庫
+2. 創建特性分支 (`git checkout -b feature/新功能`)
+3. 提交更改 (`git commit -am '添加新功能'`)
+4. 推送到分支 (`git push origin feature/新功能`)
+5. 提交 Pull Request
 
 ## 📝 授權
 
