@@ -1,9 +1,11 @@
+
 import json
 import logging
 import time
 import sys
 import re
 import os
+import argparse
 from pywinauto import Application
 
 
@@ -98,10 +100,11 @@ def load_config(config_path: str = None) -> dict:
     return config
 
 
-def execute_action(ctrl, action_str: str, control_name: str):
+def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
     """
     根據 Action 字串執行對應操作。
     所有 click 類操作統一使用 click_input()。
+    若 value 不為空，則優先作為 type_keys / set_text / send_keys 的輸入內容。
     """
     action_lower = action_str.strip().lower()
 
@@ -111,23 +114,36 @@ def execute_action(ctrl, action_str: str, control_name: str):
         ctrl.double_click_input()
     elif action_lower in ("right_click", "right_click_input", "right_click_input()"):
         ctrl.right_click_input()
+    elif action_lower in ("send_keys", "send_keys()"):
+        # send_keys() 必須搭配 value 使用
+        if not value:
+            logger.error(f"send_keys() 需要提供 value，但 value 為空: '{control_name}'")
+            raise ValueError(f"send_keys() 需要提供 value: '{control_name}'")
+        ctrl.type_keys(value, with_spaces=True)
     elif action_lower.startswith("type_keys("):
-        # 支援 type_keys('文字') 格式
-        match = re.match(r"type_keys\(['\"](.+)['\"]\)", action_str.strip())
-        if match:
-            keys = match.group(1)
-            ctrl.type_keys(keys, with_spaces=True)
+        # 若有 value，優先使用 value；否則解析 action 字串內嵌文字
+        if value:
+            ctrl.type_keys(value, with_spaces=True)
         else:
-            logger.error(f"無法解析 type_keys 參數: {action_str}")
-            raise ValueError(f"無法解析 type_keys 參數: {action_str}")
+            match = re.match(r"type_keys\(['\"](.+)['\"]\)", action_str.strip())
+            if match:
+                keys = match.group(1)
+                ctrl.type_keys(keys, with_spaces=True)
+            else:
+                logger.error(f"無法解析 type_keys 參數: {action_str}")
+                raise ValueError(f"無法解析 type_keys 參數: {action_str}")
     elif action_lower.startswith("set_text("):
-        match = re.match(r"set_text\(['\"](.+)['\"]\)", action_str.strip())
-        if match:
-            text = match.group(1)
-            ctrl.set_text(text)
+        # 若有 value，優先使用 value；否則解析 action 字串內嵌文字
+        if value:
+            ctrl.set_text(value)
         else:
-            logger.error(f"無法解析 set_text 參數: {action_str}")
-            raise ValueError(f"無法解析 set_text 參數: {action_str}")
+            match = re.match(r"set_text\(['\"](.+)['\"]\)", action_str.strip())
+            if match:
+                text = match.group(1)
+                ctrl.set_text(text)
+            else:
+                logger.error(f"無法解析 set_text 參數: {action_str}")
+                raise ValueError(f"無法解析 set_text 參數: {action_str}")
     else:
         logger.warning(f"未知的 Action '{action_str}'，預設使用 click_input()")
         ctrl.click_input()
@@ -204,6 +220,7 @@ def execute_steps(config: dict):
         control_name = step["Name"]
         control_type = parse_control_type(step["ControlType"])
         action = step.get("Action", "click_input()")
+        value = step.get("value", "")
         wait_time = float(step.get("Wait", DEFAULT_WAIT))
         step_label = f"[步驟 {idx}/{total}]"
 
@@ -233,8 +250,8 @@ def execute_steps(config: dict):
             ctrl = find_control(dlg, control_name, control_type, step_label)
 
             # 執行操作
-            logger.info(f"{step_label} 正在執行: click_input() -> '{control_name}'")
-            execute_action(ctrl, action, control_name)
+            logger.info(f"{step_label} 正在執行: {action} -> '{control_name}' (value='{value}')")
+            execute_action(ctrl, action, control_name, value)
 
             logger.info(f"{step_label} 完成")
 
@@ -254,9 +271,13 @@ def execute_steps(config: dict):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Win_Automation - Windows GUI 自動化腳本")
+    parser.add_argument("--case", type=str, default="exec.json", help="指定要執行的 JSON 設定檔 (預設: exec.json)")
+    args = parser.parse_args()
+
     start_time = time.time()
     logger.info("Win_Automation 啟動")
-    config = load_config()
+    config = load_config(args.case)
     execute_steps(config)
     elapsed = time.time() - start_time
     minutes = int(elapsed // 60)

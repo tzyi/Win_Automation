@@ -32,13 +32,6 @@
         "Name": "網址與搜尋列",
         "ControlType": "UIA_EditControlTypeId (0xC354)",
         "Action": "send_keys()",
-        "value": "github"
-    },
-    "6": {
-        "app": "WinDesk - 新分頁 - Google Chrome",
-        "Name": "網址與搜尋列",
-        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
-        "Action": "type_keys('{ENTER}')",
-        "value": ""
+        "value": "github{ENTER}"
     }
 }
