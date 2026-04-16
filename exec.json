@@ -3,7 +3,7 @@
         "app": "GeoTag Pro",
         "Name": "folder_open 選擇照片",
         "ControlType": "UIA_TextControlTypeId (0xC364)",
-        "Action": "Click"
+        "Action": "click_input()"
     },
     "2": {
         "app": "開啟",
