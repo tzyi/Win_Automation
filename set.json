@@ -32,7 +32,8 @@
         "Name": "檔案名稱:",
         "ControlType": "UIA_EditControlTypeId (0xC354)",
         "Action": "send_keys()",
-        "value": "ad"
+        "handle": "check_file_name()",
+        "value": "ad.txt"
     },
     "6": {
         "app": "未命名 - 記事本",
