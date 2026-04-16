@@ -870,7 +870,10 @@ class InspectApp:
     # ========================================================
     def _load_config(self):
         """從 JSON 設定檔載入 UI 元件列表"""
-        default_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            default_dir = os.path.dirname(sys.executable)
+        else:
+            default_dir = os.path.dirname(os.path.abspath(__file__))
         filepath = filedialog.askopenfilename(
             title="選擇設定檔",
             initialdir=default_dir,
@@ -932,7 +935,10 @@ class InspectApp:
     # 匯出 JSON
     # ========================================================
     def _export_json(self):
-        default_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            default_dir = os.path.dirname(sys.executable)
+        else:
+            default_dir = os.path.dirname(os.path.abspath(__file__))
         filepath = filedialog.asksaveasfilename(
             title="匯出 set.json",
             initialdir=default_dir,
@@ -968,7 +974,10 @@ class InspectApp:
     # ========================================================
     def _browse_runner_config(self):
         """瀏覽並選擇設定檔"""
-        default_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            default_dir = os.path.dirname(sys.executable)
+        else:
+            default_dir = os.path.dirname(os.path.abspath(__file__))
         filepath = filedialog.askopenfilename(
             title="選擇設定檔",
             initialdir=default_dir,
@@ -998,14 +1007,21 @@ class InspectApp:
         self._log_text.configure(state="disabled")
 
         # 啟動子程序
-        run_py = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "run.py"
-        )
         # 傳遞 PYTHONIOENCODING=utf-8 給子程序，避免 cp950 編碼錯誤
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
+        if getattr(sys, 'frozen', False):
+            # 打包後：使用同目錄下的 run.exe
+            base_dir = os.path.dirname(sys.executable)
+            run_exe = os.path.join(base_dir, "run.exe")
+            cmd = [run_exe, "--case", config_path]
+        else:
+            run_py = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "run.py"
+            )
+            cmd = [sys.executable, run_py, "--case", config_path]
         self._runner_process = subprocess.Popen(
-            [sys.executable, run_py, "--case", config_path],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
