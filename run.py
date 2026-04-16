@@ -78,6 +78,7 @@ CONTROL_TYPE_MAP = {
     "UIA_PaneControlTypeId": "Pane",
     "UIA_GroupControlTypeId": "Group",
     "UIA_DataItemControlTypeId": "DataItem",
+    "UIA_DocumentControlTypeId": "Document",
     "UIA_CustomControlTypeId": "Custom",
     "UIA_HeaderControlTypeId": "Header",
     "UIA_HeaderItemControlTypeId": "HeaderItem",
@@ -204,58 +205,103 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
       2. title only            (忽略類型)
       3. title_re 正則局部匹配 (容忍空白/特殊字元差異)
       4. 遍歷 descendants() 直接比對 (適用大型頁面 / 深層巢狀控件)
+      5. control_type only     (Name 為空或前四策略均失敗時，僅依類型搜尋)
     找不到時印出所有可見控件清單以利除錯。
     """
 
-    # --- 策略 1：精確搜尋 ---
-    try:
-        ctrl = dlg.child_window(title=control_name, control_type=control_type)
-        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
-        logger.info(f"{step_label} 已找到控件 [精確]: '{control_name}' ({control_type})")
-        return ctrl
-    except Exception:
-        logger.warning(f"{step_label} 精確搜尋失敗，嘗試僅用 title ...")
-
-    # --- 策略 2：僅用 title，不限類型 ---
-    try:
-        ctrl = dlg.child_window(title=control_name)
-        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
-        logger.warning(f"{step_label} 已找到控件 [僅 title]: '{control_name}'（控件類型可能不同）")
-        return ctrl
-    except Exception:
-        logger.warning(f"{step_label} 僅 title 搜尋失敗，嘗試正則局部匹配 ...")
-
-    # --- 策略 3：正則局部匹配（逸脫特殊字元後部分匹配）---
-    try:
-        pattern = re.escape(control_name)
-        ctrl = dlg.child_window(title_re=pattern)
-        ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
-        logger.warning(f"{step_label} 已找到控件 [正則]: '{control_name}'")
-        return ctrl
-    except Exception:
-        logger.warning(f"{step_label} 正則搜尋失敗，嘗試遍歷所有子控件 ...")
-
-    # --- 策略 4：遍歷 descendants() 直接比對 ---
-    try:
-        best_match = None
-        for child in dlg.descendants():
-            try:
-                txt = child.window_text()
-                if txt == control_name:
+    # --- Name 為空：直接用 control_type 搜尋，跳過 title 相關策略 ---
+    if not control_name:
+        try:
+            ctrl = dlg.child_window(control_type=control_type)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [類型搜尋]: (type={control_type})")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} 類型搜尋失敗，嘗試遍歷所有子控件 ...")
+        # 遍歷 descendants 僅比對 control_type
+        try:
+            for child in dlg.descendants():
+                try:
                     ct = child.friendly_class_name()
                     if ct == control_type:
-                        logger.warning(f"{step_label} 已找到控件 [遍歷精確]: '{control_name}' ({ct})")
+                        logger.warning(f"{step_label} 已找到控件 [遍歷類型]: (type={ct})")
                         return child
-                    elif best_match is None:
-                        best_match = child
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        # 跳到最後的錯誤輸出
+    else:
+        # --- 策略 1：精確搜尋 ---
+        try:
+            ctrl = dlg.child_window(title=control_name, control_type=control_type)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [精確]: '{control_name}' ({control_type})")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} 精確搜尋失敗，嘗試僅用 title ...")
+
+        # --- 策略 2：僅用 title，不限類型 ---
+        try:
+            ctrl = dlg.child_window(title=control_name)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.warning(f"{step_label} 已找到控件 [僅 title]: '{control_name}'（控件類型可能不同）")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} 僅 title 搜尋失敗，嘗試正則局部匹配 ...")
+
+        # --- 策略 3：正則局部匹配（逸脫特殊字元後部分匹配）---
+        try:
+            pattern = re.escape(control_name)
+            ctrl = dlg.child_window(title_re=pattern)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.warning(f"{step_label} 已找到控件 [正則]: '{control_name}'")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} 正則搜尋失敗，嘗試遍歷所有子控件 ...")
+
+        # --- 策略 4：遍歷 descendants() 直接比對 ---
+        try:
+            best_match = None
+            for child in dlg.descendants():
+                try:
+                    txt = child.window_text()
+                    if txt == control_name:
+                        ct = child.friendly_class_name()
+                        if ct == control_type:
+                            logger.warning(f"{step_label} 已找到控件 [遍歷精確]: '{control_name}' ({ct})")
+                            return child
+                        elif best_match is None:
+                            best_match = child
+                except Exception:
+                    continue
+            if best_match is not None:
+                ct = best_match.friendly_class_name()
+                logger.warning(f"{step_label} 已找到控件 [遍歷]: '{control_name}' ({ct})")
+                return best_match
+        except Exception:
+            pass
+
+        # --- 策略 5：僅用 control_type（最終降級）---
+        if control_type:
+            try:
+                ctrl = dlg.child_window(control_type=control_type)
+                ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+                logger.warning(f"{step_label} 已找到控件 [僅類型]: (type={control_type})，title 不符但仍嘗試")
+                return ctrl
             except Exception:
-                continue
-        if best_match is not None:
-            ct = best_match.friendly_class_name()
-            logger.warning(f"{step_label} 已找到控件 [遍歷]: '{control_name}' ({ct})")
-            return best_match
-    except Exception:
-        pass
+                pass
+            try:
+                for child in dlg.descendants():
+                    try:
+                        ct = child.friendly_class_name()
+                        if ct == control_type:
+                            logger.warning(f"{step_label} 已找到控件 [遍歷僅類型]: (type={ct})")
+                            return child
+                    except Exception:
+                        continue
+            except Exception:
+                pass
 
     # --- 全部失敗：印出目前可見控件清單協助除錯 ---
     logger.error(f"{step_label} 四種搜尋策略均失敗，列出目前所有可見控件：")

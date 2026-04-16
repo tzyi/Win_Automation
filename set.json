@@ -1,14 +1,14 @@
 {
     "1": {
         "app": "未命名 - 記事本",
-        "Name": "文字編輯器",
+        "Name": "",
         "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
         "Action": "click()",
         "value": ""
     },
     "2": {
         "app": "未命名 - 記事本",
-        "Name": "文字編輯器",
+        "Name": "",
         "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
         "Action": "send_keys()",
         "value": "sadfsadgadbdfgbadfgafdsgsdfsda"
