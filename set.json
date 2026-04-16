@@ -1,16 +1,16 @@
 {
     "1": {
-        "app": "GeoSetter",
-        "Name": "上?目?",
-        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
+        "app": "未命名 - 記事本",
+        "Name": "文字編輯器",
+        "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
         "Action": "click()",
         "value": ""
     },
     "2": {
-        "app": "GeoSetter",
-        "Name": "生活日常...260112",
-        "ControlType": "UIA_ListItemControlTypeId (0xC357)",
-        "Action": "double_click()",
-        "value": ""
+        "app": "未命名 - 記事本",
+        "Name": "文字編輯器",
+        "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
+        "Action": "send_keys()",
+        "value": "sadfsadgadbdfgbadfgafdsgsdfsda"
     }
 }

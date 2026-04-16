@@ -658,6 +658,12 @@ class InspectApp:
         )
         self._btn_execute.pack(side="left", padx=4)
 
+        self._btn_stop_runner = ttk.Button(
+            exec_frame, text="■ 中斷執行", command=self._stop_automation,
+            state="disabled", bootstyle=DANGER
+        )
+        self._btn_stop_runner.pack(side="left", padx=4)
+
         self._runner_status_var = tk.StringVar(value="就緒")
         ttk.Label(
             exec_frame, textvariable=self._runner_status_var, bootstyle=SECONDARY
@@ -1009,8 +1015,9 @@ class InspectApp:
             messagebox.showerror("錯誤", f"找不到設定檔:\n{config_path}")
             return
 
-        # 鎖定執行按鈕
+        # 鎖定執行按鈕，啟用中斷按鈕
         self._btn_execute.configure(state="disabled")
+        self._btn_stop_runner.configure(state="normal")
         self._runner_status_var.set("執行中...")
 
         # 清空 Log
@@ -1066,9 +1073,17 @@ class InspectApp:
         self._log_text.see("end")
         self._log_text.configure(state="disabled")
 
+    def _stop_automation(self):
+        """中斷執行中的自動化程序"""
+        if self._runner_process is not None:
+            self._runner_process.terminate()
+            self._btn_stop_runner.configure(state="disabled")
+            self._runner_status_var.set("正在中斷...")
+
     def _on_process_done(self, returncode):
         """子程序結束時的回呼"""
         self._btn_execute.configure(state="normal")
+        self._btn_stop_runner.configure(state="disabled")
         self._runner_process = None
 
         if returncode == 0:
