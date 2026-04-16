@@ -409,6 +409,14 @@ class InspectApp:
         self._ctx_menu.add_command(label="刪除", command=self._delete_selected)
         self._tree.bind("<Button-3>", self._show_context_menu)
 
+        # --- 操作按鈕區 ---
+        btn_frame = ttk.Frame(self.root, padding=6)
+        btn_frame.pack(fill="x", padx=8, pady=4)
+
+        ttk.Button(btn_frame, text="全部清除", command=self._clear_all).pack(
+            side="right", padx=4
+        )
+
         # --- 底部狀態列 ---
         self._status_var = tk.StringVar(value="就緒")
         status_bar = ttk.Label(
@@ -575,6 +583,21 @@ class InspectApp:
                     info["value"],
                 ),
             )
+
+    def _clear_all(self):
+        """清除所有已記錄的 UI 元件"""
+        if not self._captured:
+            messagebox.showinfo("提示", "目前沒有已記錄的元件")
+            return
+
+        result = messagebox.askyesno(
+            "確認清除",
+            f"確定要清除所有 {len(self._captured)} 個已記錄的 UI 元件嗎？",
+        )
+        if result:
+            self._captured.clear()
+            self._rebuild_tree()
+            self._status_var.set("已清除所有元件")
 
     # ========================================================
     # 匯出 JSON
