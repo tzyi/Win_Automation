@@ -5,8 +5,38 @@ import time
 import sys
 import re
 import os
+import io
 import argparse
 from pywinauto import Application
+
+
+# ============================================================
+# 修正 Windows 打包 .exe 後的 Unicode 編碼問題
+# 預設終端機編碼為 cp950，無法處理 \u200b 等特殊 Unicode 字元
+# ============================================================
+if os.name == 'nt':
+    try:
+        import ctypes
+        ctypes.windll.kernel32.SetConsoleOutputCP(65001)  # 設定輸出為 UTF-8
+        ctypes.windll.kernel32.SetConsoleCP(65001)        # 設定輸入為 UTF-8
+    except Exception:
+        pass
+
+if sys.stdout is not None:
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        except Exception:
+            # 退而求其次：只設定 errors='replace'，避免無法編碼時拋出例外
+            try:
+                sys.stdout.reconfigure(errors='replace')
+            except Exception:
+                pass
+    elif hasattr(sys.stdout, 'buffer'):
+        try:
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        except Exception:
+            pass
 
 
 # ============================================================

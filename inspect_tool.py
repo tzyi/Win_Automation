@@ -1001,13 +1001,19 @@ class InspectApp:
         run_py = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "run.py"
         )
+        # 傳遞 PYTHONIOENCODING=utf-8 給子程序，避免 cp950 編碼錯誤
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
         self._runner_process = subprocess.Popen(
             [sys.executable, run_py, "--case", config_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             bufsize=1,
             cwd=os.path.dirname(os.path.abspath(__file__)),
+            env=env,
         )
 
         # 背景執行緒讀取輸出
