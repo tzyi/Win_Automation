@@ -8,11 +8,8 @@ from pywinauto import Application
 
 
 # ============================================================
-# Logging 設定：同時輸出到 Terminal 和 Log 檔案
+# Logging 設定：只輸出到 Terminal，不產生 log 檔案
 # ============================================================
-LOG_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_FILE = os.path.join(LOG_DIR, "run.log")
-
 logger = logging.getLogger("WinAutomation")
 logger.setLevel(logging.DEBUG)
 
@@ -25,17 +22,7 @@ console_fmt = logging.Formatter(
 )
 console_handler.setFormatter(console_fmt)
 
-# File handler - 寫入 log 檔案
-file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8", mode="w")
-file_handler.setLevel(logging.DEBUG)
-file_fmt = logging.Formatter(
-    "[%(asctime)s] %(levelname)-7s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-file_handler.setFormatter(file_fmt)
-
 logger.addHandler(console_handler)
-logger.addHandler(file_handler)
 
 
 # ============================================================
