@@ -87,7 +87,7 @@ python inspect_tool.py
 |**double\_click\_input()**|雙擊輸入|基於滑鼠事件|
 |**right\_click()**|右鍵點擊|基於訊息|
 |**right\_click\_input()**|右鍵點擊輸入|基於滑鼠事件|
-|**set\_keys(keys)**|發送鍵盤輸入|例如：`set\_keys("{TAB}")`, `set\_keys("{ENTER}")`|
+|**send\_keys(keys)**|發送鍵盤輸入|例如：`send\_keys("{TAB}")`, `send\_keys("{ENTER}")`|
 |**send\_message(msg)**|發送 Windows 訊息|進階用法|
 |**send\_message\_timeout()**|發送訊息並等待回應|可設定逾時時間|
 |**set\_focus()**|設定焦點|-|
