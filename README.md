@@ -9,8 +9,7 @@
 
 ---
 
-![](./img/inspect.png)
-![](./img/exec.png)
+![](./img/WinAutomation.png)
 
 ## 📖 專案簡介
 
