@@ -9,7 +9,7 @@
 
 ---
 
-![](./img/WinAutomation.png)
+![](./img/v1.0.1/WinAutomation.png)
 
 ## 📖 專案簡介
 
