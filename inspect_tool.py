@@ -333,6 +333,127 @@ class CaptureDialog(tk.Toplevel):
 
 
 # ============================================================
+# 修改元件對話框
+# ============================================================
+# 反向查找：儲存值 → 顯示文字
+_VALUE_TO_DISPLAY = {v: k for k, v in ACTION_VALUE_MAP.items()}
+
+
+class EditDialog(tk.Toplevel):
+    """彈出對話框：修改已記錄元件的所有欄位"""
+
+    def __init__(self, parent, element_info: dict):
+        super().__init__(parent)
+        self.title("修改 UI 元件")
+        self.resizable(False, False)
+        self.grab_set()
+        self.transient(parent)
+
+        self.result = None
+
+        pad = dict(padx=8, pady=4)
+
+        # --- 元件資訊（可編輯）---
+        info_frame = ttk.LabelFrame(self, text="元件資訊", padding=8)
+        info_frame.pack(fill="x", **pad)
+
+        self._entries = {}
+        for i, (label, key) in enumerate(
+            [("窗格名稱", "app"), ("Name", "Name"), ("ControlType", "ControlType")]
+        ):
+            ttk.Label(info_frame, text=f"{label}:").grid(
+                row=i, column=0, sticky="w", padx=(0, 6), pady=2
+            )
+            entry = ttk.Entry(info_frame, width=50)
+            entry.insert(0, element_info.get(key, ""))
+            entry.grid(row=i, column=1, sticky="ew", pady=2)
+            self._entries[key] = entry
+
+        info_frame.columnconfigure(1, weight=1)
+
+        # --- Action ---
+        action_frame = ttk.LabelFrame(self, text="Action", padding=8)
+        action_frame.pack(fill="x", **pad)
+
+        current_action = element_info.get("Action", "")
+        current_display = _VALUE_TO_DISPLAY.get(current_action, current_action)
+        default_display = (
+            current_display if current_display in ACTION_OPTIONS else ACTION_OPTIONS[0]
+        )
+
+        self._action_var = tk.StringVar(value=default_display)
+        action_combo = ttk.Combobox(
+            action_frame,
+            textvariable=self._action_var,
+            values=ACTION_OPTIONS,
+            state="readonly",
+            width=50,
+        )
+        action_combo.pack(anchor="w", fill="x")
+
+        # --- Value ---
+        value_frame = ttk.LabelFrame(self, text="Value（選填）", padding=8)
+        value_frame.pack(fill="x", **pad)
+
+        self._value_entry = ttk.Entry(value_frame, width=50)
+        self._value_entry.insert(0, element_info.get("value", ""))
+        self._value_entry.pack(fill="x")
+
+        # --- Wait ---
+        wait_frame = ttk.LabelFrame(self, text="Wait 等待秒數（選填）", padding=8)
+        wait_frame.pack(fill="x", **pad)
+
+        self._wait_entry = ttk.Entry(wait_frame, width=20)
+        wait_val = element_info.get("Wait", "")
+        if wait_val != "":
+            self._wait_entry.insert(0, str(wait_val))
+        self._wait_entry.pack(anchor="w")
+
+        # --- 按鈕 ---
+        btn_frame = ttk.Frame(self, padding=8)
+        btn_frame.pack(fill="x")
+
+        ttk.Button(btn_frame, text="確定", command=self._on_ok, width=10).pack(
+            side="right", padx=4
+        )
+        ttk.Button(btn_frame, text="取消", command=self._on_cancel, width=10).pack(
+            side="right", padx=4
+        )
+
+        # 置中顯示
+        self.update_idletasks()
+        w = self.winfo_width()
+        h = self.winfo_height()
+        x = parent.winfo_x() + (parent.winfo_width() - w) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - h) // 2
+        self.geometry(f"+{x}+{y}")
+
+        self.protocol("WM_DELETE_WINDOW", self._on_cancel)
+
+    def _on_ok(self):
+        selected = self._action_var.get()
+        result = {
+            "app": self._entries["app"].get(),
+            "Name": self._entries["Name"].get(),
+            "ControlType": self._entries["ControlType"].get(),
+            "Action": ACTION_VALUE_MAP.get(selected, selected),
+            "value": self._value_entry.get(),
+        }
+        wait_str = self._wait_entry.get().strip()
+        if wait_str:
+            try:
+                result["Wait"] = float(wait_str)
+            except ValueError:
+                pass
+        self.result = result
+        self.destroy()
+
+    def _on_cancel(self):
+        self.result = None
+        self.destroy()
+
+
+# ============================================================
 # 主要 GUI 應用程式
 # ============================================================
 class InspectApp:
@@ -368,6 +489,12 @@ class InspectApp:
             btn_bar, text="結束偵測", command=self._stop_inspect, state="disabled"
         )
         self._btn_stop.pack(side="left", padx=4)
+
+        ttk.Separator(btn_bar, orient="vertical").pack(side="left", fill="y", padx=6)
+
+        ttk.Button(
+            btn_bar, text="載入設定檔", command=self._load_config
+        ).pack(side="left", padx=4)
 
         ttk.Label(btn_bar, text="快捷鍵: Ctrl+F1 記錄元件", foreground="gray").pack(
             side="right", padx=8
@@ -437,10 +564,13 @@ class InspectApp:
         self._tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 右鍵選單（刪除）
+        # 右鍵選單（修改 / 刪除）
         self._ctx_menu = tk.Menu(self._tree, tearoff=0)
+        self._ctx_menu.add_command(label="修改", command=self._edit_selected)
+        self._ctx_menu.add_separator()
         self._ctx_menu.add_command(label="刪除", command=self._delete_selected)
         self._tree.bind("<Button-3>", self._show_context_menu)
+        self._tree.bind("<Double-1>", lambda e: self._edit_selected())
 
         # --- 操作按鈕區 ---
         btn_frame = ttk.Frame(self.root, padding=6)
@@ -586,6 +716,27 @@ class InspectApp:
             self._tree.selection_set(item)
             self._ctx_menu.tk_popup(event.x_root, event.y_root)
 
+    def _edit_selected(self):
+        selected = self._tree.selection()
+        if not selected:
+            return
+
+        item_id = selected[0]
+        idx = int(item_id) - 1
+        if not (0 <= idx < len(self._captured)):
+            return
+
+        info = dict(self._captured[idx])
+        dlg = EditDialog(self.root, info)
+        self.root.wait_window(dlg)
+
+        if dlg.result is None:
+            return
+
+        self._captured[idx] = dlg.result
+        self._rebuild_tree()
+        self._status_var.set(f"已修改第 {idx + 1} 個元件")
+
     def _delete_selected(self):
         selected = self._tree.selection()
         if not selected:
@@ -633,6 +784,69 @@ class InspectApp:
             self._status_var.set("已清除所有元件")
 
     # ========================================================
+    # 載入設定檔
+    # ========================================================
+    def _load_config(self):
+        """從 JSON 設定檔載入 UI 元件列表"""
+        default_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = filedialog.askopenfilename(
+            title="選擇設定檔",
+            initialdir=default_dir,
+            defaultextension=".json",
+            filetypes=[("JSON 檔案", "*.json"), ("所有檔案", "*.*")],
+        )
+        if not filepath:
+            return
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            messagebox.showerror("讀取失敗", f"無法讀取設定檔：\n{e}")
+            return
+
+        # 解析 JSON（格式：{"1": {...}, "2": {...}}）
+        items = []
+        try:
+            for key in sorted(data.keys(), key=lambda k: int(k)):
+                entry = data[key]
+                item = {
+                    "app": entry.get("app", ""),
+                    "Name": entry.get("Name", ""),
+                    "ControlType": entry.get("ControlType", ""),
+                    "Action": entry.get("Action", ""),
+                    "value": entry.get("value", ""),
+                }
+                if "Wait" in entry:
+                    item["Wait"] = entry["Wait"]
+                items.append(item)
+        except Exception as e:
+            messagebox.showerror("格式錯誤", f"設定檔格式不符：\n{e}")
+            return
+
+        if not items:
+            messagebox.showinfo("提示", "設定檔中沒有任何元件")
+            return
+
+        # 若已有資料，詢問取代或追加
+        if self._captured:
+            answer = messagebox.askyesnocancel(
+                "載入方式",
+                f"目前已有 {len(self._captured)} 個元件。\n\n"
+                f"「是」= 取代全部\n「否」= 追加到末尾\n「取消」= 放棄載入",
+            )
+            if answer is None:
+                return
+            if answer:  # 取代
+                self._captured.clear()
+
+        self._captured.extend(items)
+        self._rebuild_tree()
+        self._status_var.set(
+            f"已載入 {len(items)} 個元件 ← {os.path.basename(filepath)}"
+        )
+
+    # ========================================================
     # 匯出 JSON
     # ========================================================
     def _export_json(self):
@@ -650,13 +864,16 @@ class InspectApp:
 
         data = {}
         for i, info in enumerate(self._captured, start=1):
-            data[str(i)] = {
+            entry = {
                 "app": info["app"],
                 "Name": info["Name"],
                 "ControlType": info["ControlType"],
                 "Action": info["Action"],
                 "value": info["value"],
             }
+            if "Wait" in info:
+                entry["Wait"] = info["Wait"]
+            data[str(i)] = entry
 
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
