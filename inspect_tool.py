@@ -71,20 +71,52 @@ CONTROL_TYPE_ID_MAP = {
     50040: ("UIA_AppBarControlTypeId", "0xC378"),
 }
 
-# Action 下拉選項
-ACTION_OPTIONS = [
-    "click_input()",
-    "double_click_input()",
-    "right_click_input()",
-    "send_keys()",
-    "type_keys()",
-    "set_text()",
-    "set_focus()",
-    "close()",
-    "maximize()",
-    "minimize()",
-    "restore()",
+# Action 下拉選項 (顯示文字含中文說明, 實際儲存值)
+_ACTION_OPTIONS_RAW = [
+    # --- 點擊 ---
+    ("click()",              "click()  發送滑鼠點擊訊息"),
+    ("click_input()",        "click_input()  使用滑鼠事件進行點擊"),
+    ("double_click()",       "double_click()  雙擊"),
+    ("double_click_input()", "double_click_input()  雙擊輸入"),
+    ("right_click()",        "right_click()  右鍵點擊"),
+    ("right_click_input()",  "right_click_input()  右鍵點擊輸入"),
+    # --- 鍵盤 ---
+    ("send_keys()",          "send_keys()  發送鍵盤事件"),
+    ("type_keys()",          "type_keys()  發送鍵盤輸入"),
+    ("set_text()",           "set_text()  直接設定文字"),
+    # --- 訊息 ---
+    ("send_message()",       "send_message()  發送 Windows 訊息"),
+    ("send_message_timeout()", "send_message_timeout()  發送訊息並等待回應"),
+    # --- 焦點 / 文字 ---
+    ("set_focus()",          "set_focus()  設定焦點"),
+    ("get_focus()",          "get_focus()  取得焦點"),
+    ("set_window_text()",    "set_window_text()  設定視窗文字"),
+    # --- 視窗控制 ---
+    ("close()",              "close()  關閉視窗"),
+    ("close_click()",        "close_click()  點擊關閉"),
+    ("maximize()",           "maximize()  最大化"),
+    ("minimize()",           "minimize()  最小化"),
+    ("restore()",            "restore()  還原"),
+    ("get_show_state()",     "get_show_state()  取得顯示狀態"),
+    ("move_window()",        "move_window()  移動與調整大小"),
+    # --- 滑鼠移動 / 拖曳 ---
+    ("drag_mouse()",         "drag_mouse()  拖動滑鼠"),
+    ("move_mouse()",         "move_mouse()  移動滑鼠"),
+    ("press_mouse()",        "press_mouse()  按下滑鼠按鍵"),
+    ("release_mouse()",      "release_mouse()  放開滑鼠按鍵"),
+    ("press_mouse_input()",  "press_mouse_input()  按下滑鼠（基於事件）"),
+    ("release_mouse_input()", "release_mouse_input()  放開滑鼠（基於事件）"),
+    # --- 選單 ---
+    ("menu_select()",        "menu_select()  選擇菜單項目"),
+    ("notify_menu_select()", "notify_menu_select()  通知菜單選擇"),
+    ("notify_parent()",      "notify_parent()  通知父視窗"),
+    # --- 其他 ---
+    ("draw_outline()",       "draw_outline()  繪製輪廓"),
+    ("rectangle",            "rectangle  取得矩形座標（屬性）"),
+    ("children",             "children  取得子視窗列表（屬性）"),
 ]
+ACTION_OPTIONS = [display for _, display in _ACTION_OPTIONS_RAW]
+ACTION_VALUE_MAP = {display: value for value, display in _ACTION_OPTIONS_RAW}
 
 # 偵測輪詢間隔 (毫秒)
 POLL_INTERVAL_MS = 150
@@ -288,8 +320,9 @@ class CaptureDialog(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
 
     def _on_ok(self):
+        selected = self._action_var.get()
         self.result = {
-            "Action": self._action_var.get(),
+            "Action": ACTION_VALUE_MAP.get(selected, selected),
             "value": self._value_entry.get(),
         }
         self.destroy()
