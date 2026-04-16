@@ -288,9 +288,9 @@ class CaptureDialog(tk.Toplevel):
             textvariable=self._action_var,
             values=ACTION_OPTIONS,
             state="readonly",
-            width=30,
+            width=50,
         )
-        action_combo.pack(anchor="w")
+        action_combo.pack(anchor="w", fill="x")
 
         # --- Value ---
         value_frame = ttk.LabelFrame(self, text="Value（選填）", padding=8)
@@ -298,6 +298,13 @@ class CaptureDialog(tk.Toplevel):
 
         self._value_entry = ttk.Entry(value_frame, width=50)
         self._value_entry.pack(fill="x")
+
+        # --- Wait ---
+        wait_frame = ttk.LabelFrame(self, text="Wait 等待秒數（選填）", padding=8)
+        wait_frame.pack(fill="x", **pad)
+
+        self._wait_entry = ttk.Entry(wait_frame, width=20)
+        self._wait_entry.pack(anchor="w")
 
         # --- 按鈕 ---
         btn_frame = ttk.Frame(self, padding=8)
@@ -326,6 +333,12 @@ class CaptureDialog(tk.Toplevel):
             "Action": ACTION_VALUE_MAP.get(selected, selected),
             "value": self._value_entry.get(),
         }
+        wait_str = self._wait_entry.get().strip()
+        if wait_str:
+            try:
+                self.result["Wait"] = float(wait_str)
+            except ValueError:
+                pass
         self.destroy()
 
     def _on_cancel(self):
