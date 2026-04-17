@@ -234,6 +234,15 @@ def quick_find_in_window(dlg, control_name: str, control_type: str,
         except Exception:
             pass
 
+    # 策略 2b：僅 ClassName（ControlType 可能不匹配，如 web 元素 ComboBox→Edit）
+    if class_name:
+        try:
+            ctrl = dlg.child_window(class_name=class_name)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+
     # 策略 3：Name + ControlType
     if control_name:
         try:
@@ -290,7 +299,9 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str,
     多層降級搜尋控件（依優先順序）：
       1. AutomationId (auto_id)             — 最可靠的唯一識別碼
       2. ClassName + ControlType (class_name + control_type)
+      2b. ClassName only                     — ControlType 可能不匹配（web 元素）
       3. Name (title) + ControlType          — 精確 → 僅 title → 正則 → 遍歷
+      3e. ClassName descendants 遍歷          — web 元素 title 常不可靠
       4. found_index（同類型第 N 個）
       5. control_type only                    — 最終降級
     找不到時印出所有可見控件清單以利除錯。
@@ -315,6 +326,16 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str,
             return ctrl
         except Exception:
             logger.warning(f"{step_label} ClassName+Type 搜尋失敗，嘗試下一策略 ...")
+
+    # ===== 策略 2b：僅 ClassName（ControlType 可能不匹配，如 web 元素 ComboBox→Edit）=====
+    if class_name:
+        try:
+            ctrl = dlg.child_window(class_name=class_name)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [ClassName]: class='{class_name}'")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} ClassName 搜尋失敗，嘗試下一策略 ...")
 
     # ===== 策略 3：Name (title) + ControlType =====
     if control_name:
@@ -364,6 +385,30 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str,
             if best_match is not None:
                 ct = best_match.friendly_class_name()
                 logger.warning(f"{step_label} 已找到控件 [遍歷]: '{control_name}' ({ct})")
+                return best_match
+        except Exception:
+            pass
+
+    # ===== 策略 3e：遍歷 descendants 以 ClassName 比對（web 元素 title 常不可靠）=====
+    if class_name:
+        try:
+            best_match = None
+            for child in dlg.descendants():
+                try:
+                    elem = child.element_info
+                    cn = getattr(elem, 'class_name', '') or ''
+                    if cn == class_name:
+                        ct = child.friendly_class_name()
+                        if ct == control_type:
+                            logger.warning(f"{step_label} 已找到控件 [遍歷ClassName精確]: class='{class_name}' ({ct})")
+                            return child
+                        elif best_match is None:
+                            best_match = child
+                except Exception:
+                    continue
+            if best_match is not None:
+                ct = best_match.friendly_class_name()
+                logger.warning(f"{step_label} 已找到控件 [遍歷ClassName]: class='{class_name}' ({ct})")
                 return best_match
         except Exception:
             pass
@@ -486,9 +531,16 @@ def execute_steps(config: dict):
             # 連接到目標應用程式（快取複用，避免重複 connect）
             if app_title not in app_cache:
                 logger.info(f"{step_label} 正在連接應用程式: {app_title} ...")
-                app = Application(backend="uia").connect(
-                    title=app_title, timeout=CONNECT_TIMEOUT
-                )
+                try:
+                    app = Application(backend="uia").connect(
+                        title=app_title, timeout=CONNECT_TIMEOUT
+                    )
+                except Exception:
+                    # 精確標題連接失敗，降級為正則部分匹配（如 "Google Chrome" 可匹配 "XXX - Google Chrome"）
+                    logger.warning(f"{step_label} 精確標題連接失敗，嘗試部分匹配 ...")
+                    app = Application(backend="uia").connect(
+                        title_re=f".*{re.escape(app_title)}.*", timeout=CONNECT_TIMEOUT
+                    )
                 app_cache[app_title] = app
                 logger.info(f"{step_label} 已連接到: {app_title}")
             else:

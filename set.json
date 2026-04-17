@@ -1,10 +1,10 @@
 {
     "1": {
-        "app": "Google - Google Chrome",
-        "Name": "提出任何問題",
-        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
-        "AutomationId": "input",
-        "ClassName": "",
+        "app": "Google Chrome",
+        "Name": "網址與搜尋列",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "AutomationId": "",
+        "ClassName": "OmniboxViewViews",
         "Action": "send_keys()",
         "value": "https://www.canva.com/design/DAHHBz3cKKE/sp0BhJd2nm5UU1b4ML07Sw/edit{ENTER}"
     }
