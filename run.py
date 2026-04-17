@@ -435,7 +435,7 @@ def execute_steps(config: dict):
                 try:
                     for alt_win in app.windows():
                         try:
-                            if alt_win.handle == dlg.handle:
+                            if alt_win.handler == dlg.handler:
                                 continue
                             ctrl = quick_find_in_window(alt_win, control_name, control_type)
                             dlg = alt_win
@@ -449,15 +449,15 @@ def execute_steps(config: dict):
                     logger.error(f"{step_label} 所有視窗均找不到控件: '{control_name}' (type={control_type})")
                     raise RuntimeError(f"找不到控件: '{control_name}' (type={control_type})")
 
-            # 處理 handle（在執行動作前呼叫自訂邏輯，可修改 value）
-            handle = step.get("handle", "")
-            if handle:
-                if handle in HANDLE_REGISTRY:
-                    logger.info(f"{step_label} 執行 handle: {handle}")
-                    value = HANDLE_REGISTRY[handle](dlg, step, value)
-                    logger.info(f"{step_label} handle 處理後 value = '{value}'")
+            # 處理 handler（在執行動作前呼叫自訂邏輯，可修改 value）
+            handler = step.get("handler", "")
+            if handler:
+                if handler in HANDLE_REGISTRY:
+                    logger.info(f"{step_label} 執行 handler: {handler}")
+                    value = HANDLE_REGISTRY[handler](dlg, step, value)
+                    logger.info(f"{step_label} handler 處理後 value = '{value}'")
                 else:
-                    logger.warning(f"{step_label} 未知的 handle: '{handle}'，已跳過")
+                    logger.warning(f"{step_label} 未知的 handler: '{handler}'，已跳過")
 
             # 執行操作
             logger.info(f"{step_label} 正在執行: {action} -> '{control_name}' (value='{value}')")

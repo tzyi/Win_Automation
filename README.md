@@ -139,7 +139,7 @@ python inspect_tool.py
 ```
 Win_Automation/
 ├── run.py                # 主自動化腳本
-├── handler.py            # 自訂 Handler 模組（handle 邏輯集中管理）
+├── handler.py            # 自訂 Handler 模組（handler 邏輯集中管理）
 ├── inspect_tool.py       # 控件檢查工具
 ├── requirements.txt      # Python 依賴列表
 ├── CLAUDE.md             # 詳細技術文檔（推薦閱讀）
@@ -159,7 +159,7 @@ Win_Automation/
 ## 🪝 Handler 機制
 
 **Handler** 是在執行實際 UI 操作 **前** 自動呼叫的自訂邏輯，可對 `value` 進行預處理。  
-在 JSON 配置中以 `"handle"` 欄位指定，無需修改主程式。
+在 JSON 配置中以 `"handler"` 欄位指定，無需修改主程式。
 
 ```json
 {
@@ -168,7 +168,7 @@ Win_Automation/
   "ControlType": "UIA_EditControlTypeId",
   "Action": "set_text()",
   "value": "MyReport",
-  "handle": "check_file_name()"
+  "handler": "check_file_name()"
 }
 ```
 
@@ -194,7 +194,7 @@ Win_Automation/
   "ControlType": "UIA_EditControlTypeId",
   "Action": "set_text()",
   "value": "report",
-  "handle": "check_file_name()"
+  "handler": "check_file_name()"
 }
 ```
 
@@ -237,7 +237,7 @@ Win_Automation/
 
 1. 測試新自動化流程，複製/調整 JSON 配置檔
 2. 如需擴充新操作，於 `run.py` 增加對應 Action 處理
-3. 如需新增自訂 Handle 邏輯，於 `handler.py` 實作函數並加入 `HANDLE_REGISTRY`
+3. 如需新增自訂 handler 邏輯，於 `handler.py` 實作函數並加入 `HANDLE_REGISTRY`
 4. 更新文檔保持內容與專案同步
 
 ---

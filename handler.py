@@ -1,7 +1,7 @@
 """
-handler.py - Win_Automation 自訂 Handle 模組
+handler.py - Win_Automation 自訂 handler 模組
 
-本模組定義所有可在 JSON 配置中以 "handle" 欄位引用的自訂處理函數。
+本模組定義所有可在 JSON 配置中以 "handler" 欄位引用的自訂處理函數。
 每個 handler 函數在執行實際 UI 操作前被呼叫，可對 value 進行預處理。
 
 函數簽名規範：
@@ -13,7 +13,7 @@ handler.py - Win_Automation 自訂 Handle 模組
 
 在 JSON 配置中使用方式：
     {
-        "handle": "check_file_name()"
+        "handler": "check_file_name()"
     }
 """
 
@@ -159,7 +159,7 @@ def handle_check_file_name(dlg, step: dict, value: str) -> str:
 
     使用情境：
         在「另存新檔」對話框的檔名輸入控件執行 set_text / send_keys 前，
-        先用此 handle 確認是否需要加上時間戳避免覆蓋。
+        先用此 handler 確認是否需要加上時間戳避免覆蓋。
 
     JSON 範例：
         {
@@ -168,7 +168,7 @@ def handle_check_file_name(dlg, step: dict, value: str) -> str:
             "ControlType": "UIA_EditControlTypeId",
             "Action": "set_text()",
             "value": "MyReport",
-            "handle": "check_file_name()"
+            "handler": "check_file_name()"
         }
 
     參數：
@@ -225,7 +225,7 @@ def handle_check_file_name(dlg, step: dict, value: str) -> str:
 
 
 # ============================================================
-# Handle 註冊表：在 JSON 配置中以字串引用，對應實際函數
+# handler 註冊表：在 JSON 配置中以字串引用，對應實際函數
 # ============================================================
 HANDLE_REGISTRY = {
     "check_file_name()": handle_check_file_name,

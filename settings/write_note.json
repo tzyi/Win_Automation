@@ -32,7 +32,7 @@
         "Name": "檔案名稱:",
         "ControlType": "UIA_EditControlTypeId (0xC354)",
         "Action": "send_keys()",
-        "handle": "check_file_name()",
+        "handler": "check_file_name()",
         "value": "ad.txt"
     },
     "6": {
