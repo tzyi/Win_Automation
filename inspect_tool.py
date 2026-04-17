@@ -605,6 +605,14 @@ class InspectApp:
         self._tree.bind("<Button-3>", self._show_context_menu)
         self._tree.bind("<Double-1>", lambda e: self._edit_selected())
 
+        # 拖曳排序（左鍵長按拖曳以調換順序）
+        self._drag_source = None
+        self._drag_target_prev = None
+        self._tree.tag_configure("drag_target", background="#2d5a8e")
+        self._tree.bind("<ButtonPress-1>", self._drag_start)
+        self._tree.bind("<B1-Motion>", self._drag_motion)
+        self._tree.bind("<ButtonRelease-1>", self._drag_drop)
+
         # --- 操作按鈕區 ---
         btn_frame = ttk.Frame(parent, padding=6)
         btn_frame.pack(fill="x", padx=8, pady=4)
@@ -867,6 +875,62 @@ class InspectApp:
                     info["value"],
                 ),
             )
+
+    # ========================================================
+    # 拖曳排序
+    # ========================================================
+    def _drag_start(self, event):
+        """記錄被拖曳的列"""
+        item = self._tree.identify_row(event.y)
+        if item:
+            self._drag_source = item
+            self._drag_target_prev = None
+            self._tree.configure(cursor="size_ns")
+
+    def _drag_motion(self, event):
+        """拖曳中：高亮目標列"""
+        if not self._drag_source:
+            return
+        target = self._tree.identify_row(event.y)
+        # 取消前一個目標的高亮
+        if self._drag_target_prev and self._drag_target_prev in self._tree.get_children():
+            self._tree.item(self._drag_target_prev, tags=())
+        # 高亮新目標列
+        if target and target != self._drag_source:
+            self._tree.item(target, tags=("drag_target",))
+            self._drag_target_prev = target
+        else:
+            self._drag_target_prev = None
+
+    def _drag_drop(self, event):
+        """放開：執行重排"""
+        self._tree.configure(cursor="")
+        # 清除高亮
+        if self._drag_target_prev and self._drag_target_prev in self._tree.get_children():
+            self._tree.item(self._drag_target_prev, tags=())
+        self._drag_target_prev = None
+
+        src = self._drag_source
+        self._drag_source = None
+        if not src:
+            return
+
+        target = self._tree.identify_row(event.y)
+        if not target or target == src:
+            return
+
+        src_idx = int(src) - 1
+        dst_idx = int(target) - 1
+        if not (0 <= src_idx < len(self._captured) and 0 <= dst_idx < len(self._captured)):
+            return
+
+        item = self._captured.pop(src_idx)
+        self._captured.insert(dst_idx, item)
+        self._rebuild_tree()
+        # 重新選中被移動的列
+        self._tree.selection_set(str(dst_idx + 1))
+        self._tree.see(str(dst_idx + 1))
+        self._status_var.set(f"已將第 {src_idx + 1} 步移到第 {dst_idx + 1} 步")
 
     def _clear_all(self):
         """清除所有已記錄的 UI 元件"""
