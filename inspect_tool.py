@@ -26,6 +26,12 @@ from ttkbootstrap.constants import *
 import comtypes
 import comtypes.client
 
+# 自訂 handler 模組（取得已註冊的 handler 清單）
+try:
+    from handler import HANDLE_REGISTRY as _HANDLE_REGISTRY
+except Exception:
+    _HANDLE_REGISTRY = {}
+
 
 # ============================================================
 # UIA ControlType ID → 顯示名稱 對照表
@@ -120,6 +126,9 @@ _ACTION_OPTIONS_RAW = [
 ]
 ACTION_OPTIONS = [display for _, display in _ACTION_OPTIONS_RAW]
 ACTION_VALUE_MAP = {display: value for value, display in _ACTION_OPTIONS_RAW}
+
+# Handler 下拉選項
+HANDLER_OPTIONS = list(_HANDLE_REGISTRY.keys())
 
 # 偵測輪詢間隔 (毫秒)
 POLL_INTERVAL_MS = 150
@@ -308,6 +317,20 @@ class CaptureDialog(tk.Toplevel):
         self._wait_entry = ttk.Entry(wait_frame, width=20)
         self._wait_entry.pack(anchor="w")
 
+        # --- Handler ---
+        handler_frame = ttk.Labelframe(self, text="Handler（選填）", padding=8, bootstyle=PRIMARY)
+        handler_frame.pack(fill="x", **pad)
+
+        self._handler_var = tk.StringVar(value="")
+        handler_combo = ttk.Combobox(
+            handler_frame,
+            textvariable=self._handler_var,
+            values=HANDLER_OPTIONS,
+            state="readonly",
+            width=50,
+        )
+        handler_combo.pack(anchor="w", fill="x")
+
         # --- 按鈕 ---
         btn_frame = ttk.Frame(self, padding=8)
         btn_frame.pack(fill="x")
@@ -341,6 +364,9 @@ class CaptureDialog(tk.Toplevel):
                 self.result["Wait"] = float(wait_str)
             except ValueError:
                 pass
+        handler_str = self._handler_var.get().strip()
+        if handler_str:
+            self.result["handler"] = handler_str
         self.destroy()
 
     def _on_cancel(self):
@@ -425,6 +451,23 @@ class EditDialog(tk.Toplevel):
             self._wait_entry.insert(0, str(wait_val))
         self._wait_entry.pack(anchor="w")
 
+        # --- Handler ---
+        handler_frame = ttk.Labelframe(self, text="Handler（選填）", padding=8, bootstyle=PRIMARY)
+        handler_frame.pack(fill="x", **pad)
+
+        current_handler = element_info.get("handler", "")
+        if current_handler not in HANDLER_OPTIONS:
+            current_handler = ""
+        self._handler_var = tk.StringVar(value=current_handler)
+        handler_combo = ttk.Combobox(
+            handler_frame,
+            textvariable=self._handler_var,
+            values=HANDLER_OPTIONS,
+            state="readonly",
+            width=50,
+        )
+        handler_combo.pack(anchor="w", fill="x")
+
         # --- 按鈕 ---
         btn_frame = ttk.Frame(self, padding=8)
         btn_frame.pack(fill="x")
@@ -461,6 +504,9 @@ class EditDialog(tk.Toplevel):
                 result["Wait"] = float(wait_str)
             except ValueError:
                 pass
+        handler_str = self._handler_var.get().strip()
+        if handler_str:
+            result["handler"] = handler_str
         self.result = result
         self.destroy()
 
@@ -573,7 +619,7 @@ class InspectApp:
         )
         list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
-        columns = ("step", "app", "name", "type", "action", "value")
+        columns = ("step", "app", "name", "type", "action", "value", "handler")
         self._tree = ttk.Treeview(
             list_frame, columns=columns, show="headings", selectmode="browse"
         )
@@ -585,6 +631,7 @@ class InspectApp:
             ("type", "ControlType", 160),
             ("action", "Action", 120),
             ("value", "value", 100),
+            ("handler", "Handler", 120),
         ]
         for col_id, heading, width in col_cfg:
             self._tree.heading(col_id, text=heading, anchor="w")
@@ -873,6 +920,7 @@ class InspectApp:
                     info["ControlType"],
                     info["Action"],
                     info["value"],
+                    info.get("handler", ""),
                 ),
             )
 
@@ -986,6 +1034,8 @@ class InspectApp:
                 }
                 if "Wait" in entry:
                     item["Wait"] = entry["Wait"]
+                if "handler" in entry:
+                    item["handler"] = entry["handler"]
                 items.append(item)
         except Exception as e:
             messagebox.showerror("格式錯誤", f"設定檔格式不符：\n{e}")
