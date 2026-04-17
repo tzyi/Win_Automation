@@ -1,0 +1,107 @@
+How found:	Mouse move (-1149,625)
+	hwnd=0x001D09C2 64bit class="Chrome_RenderWidgetHostHWND" style=0x56300000 ex=0x20
+Name:	"搜尋"
+ControlType:	UIA_ComboBoxControlTypeId (0xC353)
+LocalizedControlType:	"下拉式方塊"
+BoundingRectangle:	{l:-1764 t:593 r:-1018 b:677}
+IsEnabled:	true
+IsOffscreen:	false
+IsKeyboardFocusable:	true
+HasKeyboardFocus:	false
+ProcessId:	27340
+RuntimeId:	[2A.1D09C2.4.3B.6A.1F72]
+AutomationId:	"APjFqb"
+FrameworkId:	"Chrome"
+ClassName:	"gLFyf"
+IsControlElement:	true
+IsContentElement:	true
+ProviderDescription:	"[pid:27340,providerId:0x0 Main(parent link):Unidentified Provider (unmanaged:chrome.dll)]"
+IsPeripheral:	false
+AriaRole:	"combobox"
+AriaProperties:	"expanded=false;haspopup=listbox;multiline=true;multiselectable=false;required=false;hasactions=false"
+LiveSettingProperty:	Off (0)
+IsPassword:	false
+IsRequiredForForm:	false
+IsDataValidForForm:	true
+HelpText:	"Google 搜尋"
+DescribedBy:	
+ControllerForProperty:	
+FlowsTo:	
+FlowsFrom:	
+ClickablePoint:	{x:-1391 y:635}
+Culture:	1028
+Orientation:	0
+OptimizeForVisualContent:	false
+AnnotationObjects:	
+FullDescription:	"Google 搜尋"
+IsDialog:	false
+ExpandCollapse.ExpandCollapseState:	Collapsed (0)
+LegacyIAccessible.ChildId:	0
+LegacyIAccessible.DefaultAction:	"展開"
+LegacyIAccessible.Description:	""
+LegacyIAccessible.Help:	"Google 搜尋"
+LegacyIAccessible.KeyboardShortcut:	""
+LegacyIAccessible.Name:	"搜尋"
+LegacyIAccessible.Role:	下拉式方塊 (0x2E)
+LegacyIAccessible.State:	已摺疊,可設定焦點 (0x100400)
+LegacyIAccessible.Value:	""
+Value.IsReadOnly:	false
+Value.Value:	""
+IsAnnotationPatternAvailable:	false
+IsDragPatternAvailable:	false
+IsDockPatternAvailable:	false
+IsDropTargetPatternAvailable:	false
+IsExpandCollapsePatternAvailable:	true
+IsGridItemPatternAvailable:	false
+IsGridPatternAvailable:	false
+IsInvokePatternAvailable:	false
+IsItemContainerPatternAvailable:	false
+IsLegacyIAccessiblePatternAvailable:	true
+IsMultipleViewPatternAvailable:	false
+IsObjectModelPatternAvailable:	false
+IsRangeValuePatternAvailable:	false
+IsScrollItemPatternAvailable:	true
+IsScrollPatternAvailable:	false
+IsSelectionItemPatternAvailable:	false
+IsSelectionPatternAvailable:	false
+IsSpreadsheetItemPatternAvailable:	false
+IsSpreadsheetPatternAvailable:	false
+IsStylesPatternAvailable:	false
+IsSynchronizedInputPatternAvailable:	false
+IsTableItemPatternAvailable:	false
+IsTablePatternAvailable:	false
+IsTextChildPatternAvailable:	true
+IsTextEditPatternAvailable:	true
+IsTextPatternAvailable:	true
+IsTextPattern2Available:	false
+IsTogglePatternAvailable:	false
+IsTransformPatternAvailable:	false
+IsTransform2PatternAvailable:	false
+IsValuePatternAvailable:	true
+IsVirtualizedItemPatternAvailable:	false
+IsWindowPatternAvailable:	false
+IsCustomNavigationPatternAvailable:	false
+IsSelectionPattern2Available:	false
+FirstChild:	[null]
+LastChild:	[null]
+Next:	"語音搜尋" 按鈕
+Previous:	"" 群組
+Other Props:	Object has no additional properties
+Children:	Container has no children
+Ancestors:	"" 群組
+	"" 群組
+	"" search
+	"" 群組
+	"" 群組
+	"Google" 文件
+	"Chrome Legacy Window" 窗格
+	"" 區域
+	"" 區域
+	"" 區域
+	"" 區域
+	"" 區域
+	"" 區域
+	"Google - Google Chrome" 區域
+	"Google - Google Chrome" 視窗
+	"桌面 1" 窗格
+	[ No Parent ]

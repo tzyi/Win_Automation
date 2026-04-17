@@ -189,9 +189,181 @@ class UIAInspector:
                 "app": app_name,
                 "Name": name,
                 "ControlType": control_type_str,
+                "_elem": elem,  # 保留元素參考，供詳細資訊使用
             }
         except Exception:
             return None
+
+    # --------------------------------------------------------
+    def get_detailed_info(self, elem) -> str:
+        """從 UIA 元素取得完整屬性，回傳格式化文字"""
+        lines = []
+
+        def _safe(func, default=""):
+            try:
+                v = func()
+                return v if v is not None else default
+            except Exception:
+                return default
+
+        # --- 基本屬性 ---
+        lines.append(f"Name:\t\"{_safe(lambda: elem.CurrentName)}\"")
+        ct_id = _safe(lambda: elem.CurrentControlType, 0)
+        lines.append(f"ControlType:\t{format_control_type(ct_id) if ct_id else 'Unknown'}")
+        lines.append(f"LocalizedControlType:\t\"{_safe(lambda: elem.CurrentLocalizedControlType)}\"")
+
+        # BoundingRectangle
+        try:
+            rect = elem.CurrentBoundingRectangle
+            lines.append(f"BoundingRectangle:\t{{l:{rect.left} t:{rect.top} r:{rect.right} b:{rect.bottom}}}")
+        except Exception:
+            lines.append("BoundingRectangle:\t")
+
+        lines.append(f"IsEnabled:\t{str(_safe(lambda: elem.CurrentIsEnabled, False)).lower()}")
+        lines.append(f"IsOffscreen:\t{str(_safe(lambda: elem.CurrentIsOffscreen, False)).lower()}")
+        lines.append(f"IsKeyboardFocusable:\t{str(_safe(lambda: elem.CurrentIsKeyboardFocusable, False)).lower()}")
+        lines.append(f"HasKeyboardFocus:\t{str(_safe(lambda: elem.CurrentHasKeyboardFocus, False)).lower()}")
+        lines.append(f"ProcessId:\t{_safe(lambda: elem.CurrentProcessId, 0)}")
+
+        # RuntimeId
+        try:
+            rid = elem.GetRuntimeId()
+            if rid:
+                hex_parts = [f"{x:X}" for x in rid]
+                lines.append(f"RuntimeId:\t[{'.'.join(hex_parts)}]")
+            else:
+                lines.append("RuntimeId:\t")
+        except Exception:
+            lines.append("RuntimeId:\t")
+
+        lines.append(f"AutomationId:\t\"{_safe(lambda: elem.CurrentAutomationId)}\"")
+        lines.append(f"FrameworkId:\t\"{_safe(lambda: elem.CurrentFrameworkId)}\"")
+        lines.append(f"ClassName:\t\"{_safe(lambda: elem.CurrentClassName)}\"")
+        lines.append(f"IsControlElement:\t{str(_safe(lambda: elem.CurrentIsControlElement, False)).lower()}")
+        lines.append(f"IsContentElement:\t{str(_safe(lambda: elem.CurrentIsContentElement, False)).lower()}")
+        lines.append(f"ProviderDescription:\t\"{_safe(lambda: elem.CurrentProviderDescription)}\"")
+
+        # 額外屬性（可能不支援）
+        lines.append(f"IsPeripheral:\t{str(_safe(lambda: elem.CurrentIsPeripheral, False)).lower()}")
+        lines.append(f"AriaRole:\t\"{_safe(lambda: elem.CurrentAriaRole)}\"")
+        lines.append(f"AriaProperties:\t\"{_safe(lambda: elem.CurrentAriaProperties)}\"")
+        lines.append(f"IsPassword:\t{str(_safe(lambda: elem.CurrentIsPassword, False)).lower()}")
+        lines.append(f"IsRequiredForForm:\t{str(_safe(lambda: elem.CurrentIsRequiredForForm, False)).lower()}")
+        lines.append(f"IsDataValidForForm:\t{str(_safe(lambda: elem.CurrentIsDataValidForForm, False)).lower()}")
+        lines.append(f"HelpText:\t\"{_safe(lambda: elem.CurrentHelpText)}\"")
+
+        # ClickablePoint
+        try:
+            pt = elem.GetClickablePoint()
+            if pt and hasattr(pt, '__len__') and len(pt) == 2:
+                clickable, point = pt
+                if clickable:
+                    lines.append(f"ClickablePoint:\t{{x:{int(point.x)} y:{int(point.y)}}}")
+                else:
+                    lines.append("ClickablePoint:\t")
+            else:
+                lines.append("ClickablePoint:\t")
+        except Exception:
+            lines.append("ClickablePoint:\t")
+
+        lines.append(f"Culture:\t{_safe(lambda: elem.CurrentCulture, 0)}")
+        lines.append(f"Orientation:\t{_safe(lambda: elem.CurrentOrientation, 0)}")
+        lines.append(f"FullDescription:\t\"{_safe(lambda: elem.CurrentFullDescription)}\"")
+        lines.append(f"IsDialog:\t{str(_safe(lambda: elem.CurrentIsDialog, False)).lower()}")
+
+        # --- Pattern 可用性 ---
+        lines.append("")
+        lines.append("--- Pattern Availability ---")
+        pattern_props = [
+            ("IsInvokePatternAvailable", 10000),
+            ("IsSelectionPatternAvailable", 10001),
+            ("IsValuePatternAvailable", 10002),
+            ("IsRangeValuePatternAvailable", 10003),
+            ("IsScrollPatternAvailable", 10004),
+            ("IsExpandCollapsePatternAvailable", 10005),
+            ("IsGridPatternAvailable", 10006),
+            ("IsGridItemPatternAvailable", 10007),
+            ("IsMultipleViewPatternAvailable", 10008),
+            ("IsWindowPatternAvailable", 10009),
+            ("IsSelectionItemPatternAvailable", 10010),
+            ("IsDockPatternAvailable", 10011),
+            ("IsTablePatternAvailable", 10012),
+            ("IsTableItemPatternAvailable", 10013),
+            ("IsTextPatternAvailable", 10014),
+            ("IsTogglePatternAvailable", 10015),
+            ("IsTransformPatternAvailable", 10016),
+            ("IsScrollItemPatternAvailable", 10017),
+            ("IsLegacyIAccessiblePatternAvailable", 10018),
+            ("IsItemContainerPatternAvailable", 10019),
+            ("IsSynchronizedInputPatternAvailable", 10020),
+            ("IsAnnotationPatternAvailable", 10023),
+            ("IsTextPattern2Available", 10024),
+            ("IsStylesPatternAvailable", 10025),
+            ("IsSpreadsheetPatternAvailable", 10026),
+            ("IsSpreadsheetItemPatternAvailable", 10027),
+            ("IsTransform2PatternAvailable", 10028),
+            ("IsTextEditPatternAvailable", 10029),
+            ("IsCustomNavigationPatternAvailable", 10033),
+            ("IsSelectionPattern2Available", 10034),
+            ("IsDragPatternAvailable", 10035),
+            ("IsDropTargetPatternAvailable", 10036),
+            ("IsObjectModelPatternAvailable", 10022),
+            ("IsTextChildPatternAvailable", 10030),
+            ("IsVirtualizedItemPatternAvailable", 10020),
+        ]
+        seen = set()
+        for pname, pid in pattern_props:
+            if pname in seen:
+                continue
+            seen.add(pname)
+            try:
+                val = elem.GetCurrentPropertyValue(pid)
+                lines.append(f"{pname}:\t{str(bool(val)).lower()}")
+            except Exception:
+                lines.append(f"{pname}:\t")
+
+        # --- 樹狀結構 ---
+        lines.append("")
+        lines.append("--- Tree Navigation ---")
+        for label, getter in [
+            ("FirstChild", lambda: self._walker.GetFirstChildElement(elem)),
+            ("LastChild", lambda: self._walker.GetLastChildElement(elem)),
+            ("Next", lambda: self._walker.GetNextSiblingElement(elem)),
+            ("Previous", lambda: self._walker.GetPreviousSiblingElement(elem)),
+        ]:
+            try:
+                sibling = getter()
+                if sibling:
+                    sname = sibling.CurrentName or ""
+                    stype = format_control_type(sibling.CurrentControlType)
+                    short_type = stype.split("_")[1].replace("ControlTypeId", "").strip() if "_" in stype else stype
+                    lines.append(f"{label}:\t\"{sname}\" {short_type}")
+                else:
+                    lines.append(f"{label}:\t[null]")
+            except Exception:
+                lines.append(f"{label}:\t[null]")
+
+        # --- Ancestors ---
+        lines.append("")
+        lines.append("--- Ancestors ---")
+        try:
+            current = elem
+            for _ in range(32):
+                parent = self._walker.GetParentElement(current)
+                if parent is None:
+                    break
+                if self._uia.CompareElements(parent, self._root):
+                    lines.append("\t[ No Parent ]")
+                    break
+                pname = parent.CurrentName or ""
+                ptype = format_control_type(parent.CurrentControlType)
+                short_type = ptype.split("_")[1].replace("ControlTypeId", "").strip() if "_" in ptype else ptype
+                lines.append(f"\t\"{pname}\" {short_type}")
+                current = parent
+        except Exception:
+            pass
+
+        return "\n".join(lines)
 
     # --------------------------------------------------------
     def _get_top_window_name(self, element) -> str:
@@ -215,25 +387,27 @@ class UIAInspector:
 # 全域快捷鍵監聽 (Ctrl+F1)
 # ============================================================
 class HotkeyListener:
-    """使用 Windows RegisterHotKey API 監聽 Ctrl+F1"""
+    """使用 Windows RegisterHotKey API 監聽多組快捷鍵"""
 
     _MOD_CONTROL = 0x0002
     _VK_F1 = 0x70
+    _VK_F2 = 0x71
     _WM_HOTKEY = 0x0312
-    _HOTKEY_ID = 1
+    _ID_F1 = 1
+    _ID_F2 = 2
 
-    def __init__(self, callback):
-        self._callback = callback
+    def __init__(self, callback_f1, callback_f2=None):
+        self._callback_f1 = callback_f1
+        self._callback_f2 = callback_f2
         self._running = True
         self._thread = threading.Thread(target=self._listen, daemon=True)
         self._thread.start()
 
     def _listen(self):
         user32 = ctypes.windll.user32
-        ok = user32.RegisterHotKey(
-            None, self._HOTKEY_ID, self._MOD_CONTROL, self._VK_F1
-        )
-        if not ok:
+        ok1 = user32.RegisterHotKey(None, self._ID_F1, self._MOD_CONTROL, self._VK_F1)
+        ok2 = user32.RegisterHotKey(None, self._ID_F2, self._MOD_CONTROL, self._VK_F2)
+        if not ok1 and not ok2:
             return
 
         msg = ctypes.wintypes.MSG()
@@ -241,10 +415,16 @@ class HotkeyListener:
             ret = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
             if ret <= 0:
                 break
-            if msg.message == self._WM_HOTKEY and msg.wParam == self._HOTKEY_ID:
-                self._callback()
+            if msg.message == self._WM_HOTKEY:
+                if msg.wParam == self._ID_F1 and self._callback_f1:
+                    self._callback_f1()
+                elif msg.wParam == self._ID_F2 and self._callback_f2:
+                    self._callback_f2()
 
-        user32.UnregisterHotKey(None, self._HOTKEY_ID)
+        if ok1:
+            user32.UnregisterHotKey(None, self._ID_F1)
+        if ok2:
+            user32.UnregisterHotKey(None, self._ID_F2)
 
     def stop(self):
         self._running = False
@@ -253,6 +433,70 @@ class HotkeyListener:
             ctypes.windll.user32.PostThreadMessageW(
                 self._thread.native_id, 0x0012, 0, 0  # WM_QUIT
             )
+
+
+# ============================================================
+# 詳細資訊對話框
+# ============================================================
+class DetailDialog(tk.Toplevel):
+    """顯示 UI 元素的完整 UIA 屬性"""
+
+    def __init__(self, parent, detail_text: str):
+        super().__init__(parent)
+        self.title("元件詳細資訊")
+        self.resizable(True, True)
+        self.grab_set()
+        self.transient(parent)
+
+        # 文字區域 + 捲軸
+        text_frame = ttk.Frame(self, padding=8)
+        text_frame.pack(fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
+        self._text = tk.Text(
+            text_frame,
+            wrap="none",
+            width=90,
+            height=35,
+            font=("Consolas", 10),
+            yscrollcommand=scrollbar.set,
+        )
+        h_scrollbar = ttk.Scrollbar(text_frame, orient="horizontal", command=self._text.xview)
+        self._text.configure(xscrollcommand=h_scrollbar.set)
+        scrollbar.configure(command=self._text.yview)
+
+        self._text.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+
+        text_frame.rowconfigure(0, weight=1)
+        text_frame.columnconfigure(0, weight=1)
+
+        self._text.insert("1.0", detail_text)
+        self._text.configure(state="disabled")
+
+        # 按鈕列
+        btn_frame = ttk.Frame(self, padding=8)
+        btn_frame.pack(fill="x")
+
+        ttk.Button(btn_frame, text="複製全部", command=self._copy_all, width=12, bootstyle=INFO).pack(
+            side="left", padx=4
+        )
+        ttk.Button(btn_frame, text="關閉", command=self.destroy, width=10, bootstyle=SECONDARY).pack(
+            side="right", padx=4
+        )
+
+        # 置中
+        self.update_idletasks()
+        w = self.winfo_width()
+        h = self.winfo_height()
+        x = parent.winfo_x() + (parent.winfo_width() - w) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - h) // 2
+        self.geometry(f"+{x}+{y}")
+
+    def _copy_all(self):
+        self.clipboard_clear()
+        self.clipboard_append(self._text.get("1.0", "end-1c"))
 
 
 # ============================================================
@@ -575,7 +819,7 @@ class InspectApp:
             btn_bar, text="載入設定檔", command=self._load_config, bootstyle=(INFO, OUTLINE)
         ).pack(side="left", padx=4)
 
-        ttk.Label(btn_bar, text="快捷鍵: Ctrl+F1 記錄元件", bootstyle=SECONDARY).pack(
+        ttk.Label(btn_bar, text="快捷鍵: Ctrl+F1 記錄 | Ctrl+F2 詳細資訊", bootstyle=SECONDARY).pack(
             side="right", padx=8
         )
 
@@ -610,6 +854,13 @@ class InspectApp:
             ).grid(row=i, column=1, sticky="ew", pady=2)
 
         info_frame.columnconfigure(1, weight=1)
+
+        # 「更多資訊」按鈕
+        self._btn_detail = ttk.Button(
+            info_frame, text="更多資訊", command=self._show_detail,
+            state="disabled", bootstyle=(INFO, OUTLINE), width=10,
+        )
+        self._btn_detail.grid(row=3, column=1, sticky="e", pady=(4, 0))
 
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
@@ -765,10 +1016,10 @@ class InspectApp:
         self.root.attributes("-topmost", True)
 
         # 啟動快捷鍵監聽
-        self._hotkey_listener = HotkeyListener(self._on_hotkey)
+        self._hotkey_listener = HotkeyListener(self._on_hotkey, self._on_hotkey_detail)
 
         # 開始輪詢
-        self._status_var.set("偵測中… 移動滑鼠到目標元件，Ctrl+F1 記錄")
+        self._status_var.set("偵測中… 移動滑鼠到目標元件，Ctrl+F1 記錄 | Ctrl+F2 查看詳細")
         self._poll_mouse()
 
     def _stop_inspect(self):
@@ -794,6 +1045,7 @@ class InspectApp:
         self._var_app.set("—")
         self._var_name.set("—")
         self._var_type.set("—")
+        self._btn_detail.configure(state="disabled")
 
         self._status_var.set("偵測已結束")
 
@@ -814,21 +1066,48 @@ class InspectApp:
                 self._var_app.set(info["app"])
                 self._var_name.set(info["Name"])
                 self._var_type.set(info["ControlType"])
+                self._btn_detail.configure(state="normal")
             else:
                 self._current_info = None
                 self._var_app.set("（無法偵測）")
                 self._var_name.set("—")
                 self._var_type.set("—")
+                self._btn_detail.configure(state="disabled")
         except Exception:
             pass
 
         self._poll_id = self.root.after(POLL_INTERVAL_MS, self._poll_mouse)
 
     # ========================================================
+    # 更多資訊
+    # ========================================================
+    def _show_detail(self):
+        info = self._current_info
+        if not info or "_elem" not in info:
+            return
+        # 暂停偵測輪詢，避免元素變動
+        was_inspecting = self._is_inspecting
+        if self._poll_id is not None:
+            self.root.after_cancel(self._poll_id)
+            self._poll_id = None
+        try:
+            detail_text = self._inspector.get_detailed_info(info["_elem"])
+        except Exception as e:
+            detail_text = f"無法取得詳細資訊：{e}"
+        dlg = DetailDialog(self.root, detail_text)
+        self.root.wait_window(dlg)
+        # 恢復偵測輪詢
+        if was_inspecting and self._is_inspecting:
+            self._poll_mouse()
+
+    # ========================================================
     # 快捷鍵回呼 (Ctrl+F1) — 從背景執行緒安全呼叫
     # ========================================================
     def _on_hotkey(self):
         self.root.after(0, self._capture_element)
+
+    def _on_hotkey_detail(self):
+        self.root.after(0, self._show_detail)
 
     def _capture_element(self):
         if not self._is_inspecting or self._current_info is None:
@@ -844,6 +1123,12 @@ class InspectApp:
 
         info["Action"] = dlg.result["Action"]
         info["value"] = dlg.result["value"]
+        if "Wait" in dlg.result:
+            info["Wait"] = dlg.result["Wait"]
+        if "handler" in dlg.result:
+            info["handler"] = dlg.result["handler"]
+        # 移除內部用的 _elem 參考，不需存入記錄
+        info.pop("_elem", None)
         self._captured.append(info)
 
         step_num = len(self._captured)
@@ -858,6 +1143,7 @@ class InspectApp:
                 info["ControlType"],
                 info["Action"],
                 info["value"],
+                info.get("handler", ""),
             ),
         )
         self._status_var.set(f"已記錄第 {step_num} 個元件")
@@ -1093,6 +1379,8 @@ class InspectApp:
             }
             if "Wait" in info:
                 entry["Wait"] = info["Wait"]
+            if "handler" in info:
+                entry["handler"] = info["handler"]
             data[str(i)] = entry
 
         with open(filepath, "w", encoding="utf-8") as f:
