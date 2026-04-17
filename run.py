@@ -144,11 +144,11 @@ def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
 
     if action_lower in ("click", "click()"):
         # 使用 UIA Invoke Pattern，不移動滑鼠，適用於不在螢幕可視區域的控件
+        # 若控件不支援 Invoke Pattern（如 TextBlock），自動降級為 click_input()
         try:
             ctrl.invoke()
         except Exception:
-            # 若 Invoke Pattern 不支援，降級為先捲動再物理點擊
-            logger.warning(f"invoke() 不支援，降級為 scroll + click_input(): '{control_name}'")
+            logger.warning(f"控件 '{control_name}' 不支援 invoke()，降級為 click_input()")
             try:
                 ctrl.scroll_into_view()
             except Exception:
