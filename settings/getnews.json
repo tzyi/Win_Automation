@@ -22,8 +22,8 @@
     },
     "4": {
         "app": "4/15 匈牙利變天：新總理是誰，奧班的倒台對全世界有什麼影響？ - 敏迪選讀 Mindi World News - Google Chrome",
-        "Name": "",
-        "ControlType": "UIA_GroupControlTypeId (0xC36A)",
+        "Name": "今天花了許多時間研究匈牙利的選舉，",
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
         "Action": "send_keys()",
         "value": "^a^c"
     }
