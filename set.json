@@ -1,0 +1,67 @@
+{
+    "1": {
+        "app": "Picture Style Editor",
+        "Name": "File",
+        "ControlType": "UIA_MenuItemControlTypeId (0xC35B)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "click()",
+        "value": ""
+    },
+    "2": {
+        "app": "Picture Style Editor",
+        "Name": "FileDropDown",
+        "ControlType": "UIA_MenuControlTypeId (0xC359)",
+        "AutomationId": "",
+        "ClassName": "WindowsForms10.Window.20808.app.0.2f5a4f0_r7_ad1",
+        "Action": "set_focus()",
+        "value": "",
+        "found_index": 0
+    },
+    "3": {
+        "app": "Picture Style Editor",
+        "Name": "FileDropDown",
+        "ControlType": "UIA_MenuControlTypeId (0xC359)",
+        "AutomationId": "",
+        "ClassName": "WindowsForms10.Window.20808.app.0.2f5a4f0_r7_ad1",
+        "Action": "send_keys()",
+        "value": "{ENTER}",
+        "found_index": 0
+    },
+    "4": {
+        "app": "Picture Style Editor",
+        "Name": "常用",
+        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "click()",
+        "value": ""
+    },
+    "5": {
+        "app": "Picture Style Editor",
+        "Name": "儲存在本機",
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "double_click()",
+        "value": ""
+    },
+    "6": {
+        "app": "Picture Style Editor",
+        "Name": "SAVE",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "double_click()",
+        "value": ""
+    },
+    "7": {
+        "app": "Picture Style Editor",
+        "Name": "未命名的轉存",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "double_click()",
+        "value": ""
+    }
+}
