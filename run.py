@@ -207,81 +207,118 @@ def execute_action(ctrl, action_str: str, control_name: str, value: str = ""):
         ctrl.click_input()
 
 
-def quick_find_in_window(dlg, control_name: str, control_type: str) -> object:
+def quick_find_in_window(dlg, control_name: str, control_type: str,
+                         auto_id: str = "", class_name: str = "",
+                         found_index: int = None) -> object:
     """
     快速在指定視窗中搜尋控件（短暫 timeout），用於多視窗遍歷降級。
+    依新優先順序：AutomationId → ClassName+Type → Name+Type → found_index。
     找不到時拋出 RuntimeError。
     """
-    if not control_name:
-        ctrl = dlg.child_window(control_type=control_type)
-        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
-        return ctrl
 
-    # 策略 1：精確搜尋
-    try:
-        ctrl = dlg.child_window(title=control_name, control_type=control_type)
-        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
-        return ctrl
-    except Exception:
-        pass
-
-    # 策略 2：僅用 title
-    try:
-        ctrl = dlg.child_window(title=control_name)
-        ctrl.wait("exists", timeout=QUICK_TIMEOUT)
-        return ctrl
-    except Exception:
-        pass
-
-    # 策略 3：遍歷 descendants 直接比對
-    try:
-        for child in dlg.descendants():
-            try:
-                if child.window_text() == control_name:
-                    return child
-            except Exception:
-                continue
-    except Exception:
-        pass
-
-    raise RuntimeError(f"quick_find: 找不到控件 '{control_name}'")
-
-
-def find_control(dlg, control_name: str, control_type: str, step_label: str):
-    """
-    多層降級搜尋控件：
-      1. title + control_type  (精確)
-      2. title only            (忽略類型)
-      3. title_re 正則局部匹配 (容忍空白/特殊字元差異)
-      4. 遍歷 descendants() 直接比對 (適用大型頁面 / 深層巢狀控件)
-      5. control_type only     (Name 為空或前四策略均失敗時，僅依類型搜尋)
-    找不到時印出所有可見控件清單以利除錯。
-    """
-
-    # --- Name 為空：直接用 control_type 搜尋，跳過 title 相關策略 ---
-    if not control_name:
+    # 策略 1：AutomationId
+    if auto_id:
         try:
-            ctrl = dlg.child_window(control_type=control_type)
-            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
-            logger.info(f"{step_label} 已找到控件 [類型搜尋]: (type={control_type})")
+            ctrl = dlg.child_window(auto_id=auto_id)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
             return ctrl
         except Exception:
-            logger.warning(f"{step_label} 類型搜尋失敗，嘗試遍歷所有子控件 ...")
-        # 遍歷 descendants 僅比對 control_type
+            pass
+
+    # 策略 2：ClassName + ControlType
+    if class_name and control_type:
+        try:
+            ctrl = dlg.child_window(class_name=class_name, control_type=control_type)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+
+    # 策略 3：Name + ControlType
+    if control_name:
+        try:
+            ctrl = dlg.child_window(title=control_name, control_type=control_type)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+        # 僅用 title
+        try:
+            ctrl = dlg.child_window(title=control_name)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+
+    # 策略 4：found_index（同類型第 N 個）
+    if found_index is not None and control_type:
+        try:
+            ctrl = dlg.child_window(control_type=control_type, found_index=found_index)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+
+    # 僅 ControlType
+    if not control_name and control_type:
+        try:
+            ctrl = dlg.child_window(control_type=control_type)
+            ctrl.wait("exists", timeout=QUICK_TIMEOUT)
+            return ctrl
+        except Exception:
+            pass
+
+    # 遍歷 descendants 直接比對
+    if control_name:
         try:
             for child in dlg.descendants():
                 try:
-                    ct = child.friendly_class_name()
-                    if ct == control_type:
-                        logger.warning(f"{step_label} 已找到控件 [遍歷類型]: (type={ct})")
+                    if child.window_text() == control_name:
                         return child
                 except Exception:
                     continue
         except Exception:
             pass
-        # 跳到最後的錯誤輸出
-    else:
-        # --- 策略 1：精確搜尋 ---
+
+    raise RuntimeError(f"quick_find: 找不到控件 '{control_name}'")
+
+
+def find_control(dlg, control_name: str, control_type: str, step_label: str,
+                 auto_id: str = "", class_name: str = "",
+                 found_index: int = None):
+    """
+    多層降級搜尋控件（依優先順序）：
+      1. AutomationId (auto_id)             — 最可靠的唯一識別碼
+      2. ClassName + ControlType (class_name + control_type)
+      3. Name (title) + ControlType          — 精確 → 僅 title → 正則 → 遍歷
+      4. found_index（同類型第 N 個）
+      5. control_type only                    — 最終降級
+    找不到時印出所有可見控件清單以利除錯。
+    """
+
+    # ===== 策略 1：AutomationId =====
+    if auto_id:
+        try:
+            ctrl = dlg.child_window(auto_id=auto_id)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [AutomationId]: auto_id='{auto_id}'")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} AutomationId 搜尋失敗 (auto_id='{auto_id}')，嘗試下一策略 ...")
+
+    # ===== 策略 2：ClassName + ControlType =====
+    if class_name and control_type:
+        try:
+            ctrl = dlg.child_window(class_name=class_name, control_type=control_type)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [ClassName+Type]: class='{class_name}', type={control_type}")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} ClassName+Type 搜尋失敗，嘗試下一策略 ...")
+
+    # ===== 策略 3：Name (title) + ControlType =====
+    if control_name:
+        # 3a：title + control_type (精確)
         try:
             ctrl = dlg.child_window(title=control_name, control_type=control_type)
             ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
@@ -290,7 +327,7 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
         except Exception:
             logger.warning(f"{step_label} 精確搜尋失敗，嘗試僅用 title ...")
 
-        # --- 策略 2：僅用 title，不限類型 ---
+        # 3b：僅用 title，不限類型
         try:
             ctrl = dlg.child_window(title=control_name)
             ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
@@ -299,7 +336,7 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
         except Exception:
             logger.warning(f"{step_label} 僅 title 搜尋失敗，嘗試正則局部匹配 ...")
 
-        # --- 策略 3：正則局部匹配（逸脫特殊字元後部分匹配）---
+        # 3c：正則局部匹配（逸脫特殊字元後部分匹配）
         try:
             pattern = re.escape(control_name)
             ctrl = dlg.child_window(title_re=pattern)
@@ -309,7 +346,7 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
         except Exception:
             logger.warning(f"{step_label} 正則搜尋失敗，嘗試遍歷所有子控件 ...")
 
-        # --- 策略 4：遍歷 descendants() 直接比對 ---
+        # 3d：遍歷 descendants() 直接比對
         try:
             best_match = None
             for child in dlg.descendants():
@@ -331,41 +368,79 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str):
         except Exception:
             pass
 
-        # --- 策略 5：僅用 control_type（最終降級）---
-        if control_type:
-            try:
-                ctrl = dlg.child_window(control_type=control_type)
-                ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
-                logger.warning(f"{step_label} 已找到控件 [僅類型]: (type={control_type})，title 不符但仍嘗試")
-                return ctrl
-            except Exception:
-                pass
-            try:
-                for child in dlg.descendants():
-                    try:
-                        ct = child.friendly_class_name()
-                        if ct == control_type:
-                            logger.warning(f"{step_label} 已找到控件 [遍歷僅類型]: (type={ct})")
-                            return child
-                    except Exception:
-                        continue
-            except Exception:
-                pass
+    # ===== 策略 4：found_index（同類型第 N 個）=====
+    if found_index is not None and control_type:
+        try:
+            ctrl = dlg.child_window(control_type=control_type, found_index=found_index)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [found_index]: type={control_type}, index={found_index}")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} found_index 搜尋失敗 ...")
+
+    # ===== 策略 5：僅用 control_type（最終降級）=====
+    if not control_name and control_type:
+        try:
+            ctrl = dlg.child_window(control_type=control_type)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.info(f"{step_label} 已找到控件 [類型搜尋]: (type={control_type})")
+            return ctrl
+        except Exception:
+            logger.warning(f"{step_label} 類型搜尋失敗，嘗試遍歷所有子控件 ...")
+        try:
+            for child in dlg.descendants():
+                try:
+                    ct = child.friendly_class_name()
+                    if ct == control_type:
+                        logger.warning(f"{step_label} 已找到控件 [遍歷類型]: (type={ct})")
+                        return child
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    elif control_type:
+        # Name 相關策略都失敗，最後嘗試僅 control_type
+        try:
+            ctrl = dlg.child_window(control_type=control_type)
+            ctrl.wait("exists", timeout=CONTROL_TIMEOUT)
+            logger.warning(f"{step_label} 已找到控件 [僅類型]: (type={control_type})，title 不符但仍嘗試")
+            return ctrl
+        except Exception:
+            pass
+        try:
+            for child in dlg.descendants():
+                try:
+                    ct = child.friendly_class_name()
+                    if ct == control_type:
+                        logger.warning(f"{step_label} 已找到控件 [遍歷僅類型]: (type={ct})")
+                        return child
+                except Exception:
+                    continue
+        except Exception:
+            pass
 
     # --- 全部失敗：印出目前可見控件清單協助除錯 ---
-    logger.error(f"{step_label} 四種搜尋策略均失敗，列出目前所有可見控件：")
+    logger.error(f"{step_label} 所有搜尋策略均失敗，列出目前所有可見控件：")
     try:
         for i, child in enumerate(dlg.descendants()):
             try:
                 txt = child.window_text()
                 ct = child.friendly_class_name()
-                logger.error(f"  [{i:03d}] type={ct:20s} | title='{txt}'")
+                aid = ""
+                cn = ""
+                try:
+                    elem = child.element_info
+                    aid = getattr(elem, 'automation_id', '') or ''
+                    cn = getattr(elem, 'class_name', '') or ''
+                except Exception:
+                    pass
+                logger.error(f"  [{i:03d}] type={ct:20s} | auto_id='{aid}' | class='{cn}' | title='{txt}'")
             except Exception:
                 pass
     except Exception as dump_err:
         logger.error(f"  (無法列出子控件: {dump_err})")
 
-    raise RuntimeError(f"找不到控件: '{control_name}' (type={control_type})")
+    raise RuntimeError(f"找不到控件: '{control_name}' (type={control_type}, auto_id='{auto_id}', class='{class_name}')")
 
 
 def execute_steps(config: dict):
@@ -388,6 +463,10 @@ def execute_steps(config: dict):
         action = step.get("Action", "click_input()")
         value = step.get("value", "")
         wait_time = float(step.get("Wait", DEFAULT_WAIT))
+        auto_id = step.get("AutomationId", "")
+        class_name = step.get("ClassName", "")
+        found_index_raw = step.get("found_index", None)
+        found_index = int(found_index_raw) if found_index_raw is not None else None
         step_label = f"[步驟 {idx}/{total}]"
 
         logger.info("-" * 60)
@@ -395,6 +474,12 @@ def execute_steps(config: dict):
         logger.info(f"  應用程式 : {app_title}")
         logger.info(f"  控件名稱 : {control_name}")
         logger.info(f"  控件類型 : {control_type}")
+        if auto_id:
+            logger.info(f"  AutomationId : {auto_id}")
+        if class_name:
+            logger.info(f"  ClassName : {class_name}")
+        if found_index is not None:
+            logger.info(f"  found_index : {found_index}")
         logger.info(f"  執行動作 : {action}")
 
         try:
@@ -427,7 +512,9 @@ def execute_steps(config: dict):
             # 尋找目標控件（多層降級搜尋）
             logger.info(f"{step_label} 正在尋找控件: '{control_name}' ...")
             try:
-                ctrl = find_control(dlg, control_name, control_type, step_label)
+                ctrl = find_control(dlg, control_name, control_type, step_label,
+                                    auto_id=auto_id, class_name=class_name,
+                                    found_index=found_index)
             except RuntimeError:
                 # 主視窗找不到（如自動完成下拉視窗遮蔽），嘗試遍歷應用程式所有視窗
                 logger.warning(f"{step_label} 主視窗找不到控件，嘗試遍歷所有視窗 ...")
@@ -437,7 +524,9 @@ def execute_steps(config: dict):
                         try:
                             if alt_win.handler == dlg.handler:
                                 continue
-                            ctrl = quick_find_in_window(alt_win, control_name, control_type)
+                            ctrl = quick_find_in_window(alt_win, control_name, control_type,
+                                                        auto_id=auto_id, class_name=class_name,
+                                                        found_index=found_index)
                             dlg = alt_win
                             logger.info(f"{step_label} 已在替代視窗找到控件: '{control_name}'")
                             break

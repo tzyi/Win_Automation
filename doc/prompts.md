@@ -13,3 +13,14 @@
 並且執行到哪個步驟就要print在terminal上面
 所有的click請使用click_input()
 ```
+
+
+```
+請幫我抓取UI元件的邏輯更改
+請依照下面抓取優先順序來抓取UI元件
+
+1. AutomationId（auto_id）
+2. ClassName（class_name）+ ControlType
+3. Name（title）+ ControlType + 父層容器限定
+4. found_index（同類型第 N 個）
+```

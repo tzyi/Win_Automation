@@ -1,0 +1,49 @@
+{
+    "1": {
+        "app": "未命名 - 記事本",
+        "Name": "文字編輯器",
+        "ControlType": "UIA_DocumentControlTypeId (0xC36E)",
+        "AutomationId": "",
+        "ClassName": "RichEditD2DPT",
+        "Action": "send_keys()",
+        "value": "gahertgSERAWSERFDSAFSDF"
+    },
+    "2": {
+        "app": "未命名 - 記事本",
+        "Name": "檔案",
+        "ControlType": "UIA_MenuItemControlTypeId (0xC35B)",
+        "AutomationId": "File",
+        "ClassName": "Microsoft.UI.Xaml.Controls.MenuBarItem",
+        "Action": "click()",
+        "value": ""
+    },
+    "3": {
+        "app": "未命名 - 記事本",
+        "Name": "另存新檔",
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "AutomationId": "TextBlock",
+        "ClassName": "TextBlock",
+        "Action": "click()",
+        "value": "",
+        "Wait": 3.0
+    },
+    "4": {
+        "app": "未命名 - 記事本",
+        "Name": "檔案名稱:",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "AutomationId": "1001",
+        "ClassName": "Edit",
+        "Action": "send_keys()",
+        "value": "test.txt",
+        "handler": "check_file_name()"
+    },
+    "5": {
+        "app": "未命名 - 記事本",
+        "Name": "存檔(S)",
+        "ControlType": "UIA_ButtonControlTypeId (0xC350)",
+        "AutomationId": "1",
+        "ClassName": "Button",
+        "Action": "click()",
+        "value": ""
+    }
+}

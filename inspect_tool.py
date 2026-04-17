@@ -173,7 +173,7 @@ class UIAInspector:
 
     # --------------------------------------------------------
     def get_element_info(self, x: int, y: int) -> dict | None:
-        """回傳 {app, Name, ControlType} 或 None"""
+        """回傳 {app, Name, ControlType, AutomationId, ClassName} 或 None"""
         try:
             pt = self._tagPOINT(x, y)
             elem = self._uia.ElementFromPoint(pt)
@@ -184,11 +184,15 @@ class UIAInspector:
             control_type_id = elem.CurrentControlType
             control_type_str = format_control_type(control_type_id)
             app_name = self._get_top_window_name(elem)
+            auto_id = elem.CurrentAutomationId or ""
+            class_name = elem.CurrentClassName or ""
 
             return {
                 "app": app_name,
                 "Name": name,
                 "ControlType": control_type_str,
+                "AutomationId": auto_id,
+                "ClassName": class_name,
                 "_elem": elem,  # 保留元素參考，供詳細資訊使用
             }
         except Exception:
@@ -521,7 +525,8 @@ class CaptureDialog(tk.Toplevel):
         info_frame.pack(fill="x", **pad)
 
         for i, (label, key) in enumerate(
-            [("窗格名稱", "app"), ("Name", "Name"), ("ControlType", "ControlType")]
+            [("窗格名稱", "app"), ("Name", "Name"), ("ControlType", "ControlType"),
+             ("AutomationId", "AutomationId"), ("ClassName", "ClassName")]
         ):
             ttk.Label(info_frame, text=f"{label}:").grid(
                 row=i, column=0, sticky="w", padx=(0, 6), pady=2
@@ -560,6 +565,13 @@ class CaptureDialog(tk.Toplevel):
 
         self._wait_entry = ttk.Entry(wait_frame, width=20)
         self._wait_entry.pack(anchor="w")
+
+        # --- found_index ---
+        fi_frame = ttk.Labelframe(self, text="found_index 同類型第 N 個（選填，從 0 開始）", padding=8, bootstyle=PRIMARY)
+        fi_frame.pack(fill="x", **pad)
+
+        self._fi_entry = ttk.Entry(fi_frame, width=20)
+        self._fi_entry.pack(anchor="w")
 
         # --- Handler ---
         handler_frame = ttk.Labelframe(self, text="Handler（選填）", padding=8, bootstyle=PRIMARY)
@@ -608,6 +620,12 @@ class CaptureDialog(tk.Toplevel):
                 self.result["Wait"] = float(wait_str)
             except ValueError:
                 pass
+        fi_str = self._fi_entry.get().strip()
+        if fi_str:
+            try:
+                self.result["found_index"] = int(fi_str)
+            except ValueError:
+                pass
         handler_str = self._handler_var.get().strip()
         if handler_str:
             self.result["handler"] = handler_str
@@ -645,7 +663,8 @@ class EditDialog(tk.Toplevel):
 
         self._entries = {}
         for i, (label, key) in enumerate(
-            [("窗格名稱", "app"), ("Name", "Name"), ("ControlType", "ControlType")]
+            [("窗格名稱", "app"), ("Name", "Name"), ("ControlType", "ControlType"),
+             ("AutomationId", "AutomationId"), ("ClassName", "ClassName")]
         ):
             ttk.Label(info_frame, text=f"{label}:").grid(
                 row=i, column=0, sticky="w", padx=(0, 6), pady=2
@@ -695,6 +714,16 @@ class EditDialog(tk.Toplevel):
             self._wait_entry.insert(0, str(wait_val))
         self._wait_entry.pack(anchor="w")
 
+        # --- found_index ---
+        fi_frame = ttk.Labelframe(self, text="found_index 同類型第 N 個（選填，從 0 開始）", padding=8, bootstyle=PRIMARY)
+        fi_frame.pack(fill="x", **pad)
+
+        self._fi_entry = ttk.Entry(fi_frame, width=20)
+        fi_val = element_info.get("found_index", "")
+        if fi_val != "":
+            self._fi_entry.insert(0, str(fi_val))
+        self._fi_entry.pack(anchor="w")
+
         # --- Handler ---
         handler_frame = ttk.Labelframe(self, text="Handler（選填）", padding=8, bootstyle=PRIMARY)
         handler_frame.pack(fill="x", **pad)
@@ -739,6 +768,8 @@ class EditDialog(tk.Toplevel):
             "app": self._entries["app"].get(),
             "Name": self._entries["Name"].get(),
             "ControlType": self._entries["ControlType"].get(),
+            "AutomationId": self._entries["AutomationId"].get(),
+            "ClassName": self._entries["ClassName"].get(),
             "Action": ACTION_VALUE_MAP.get(selected, selected),
             "value": self._value_entry.get(),
         }
@@ -746,6 +777,12 @@ class EditDialog(tk.Toplevel):
         if wait_str:
             try:
                 result["Wait"] = float(wait_str)
+            except ValueError:
+                pass
+        fi_str = self._fi_entry.get().strip()
+        if fi_str:
+            try:
+                result["found_index"] = int(fi_str)
             except ValueError:
                 pass
         handler_str = self._handler_var.get().strip()
@@ -834,12 +871,16 @@ class InspectApp:
         self._var_app = tk.StringVar(value="—")
         self._var_name = tk.StringVar(value="—")
         self._var_type = tk.StringVar(value="—")
+        self._var_auto_id = tk.StringVar(value="—")
+        self._var_class_name = tk.StringVar(value="—")
 
         for i, (label, var) in enumerate(
             [
                 ("窗格名稱", self._var_app),
                 ("Name", self._var_name),
                 ("ControlType", self._var_type),
+                ("AutomationId", self._var_auto_id),
+                ("ClassName", self._var_class_name),
             ]
         ):
             ttk.Label(info_frame, text=f"{label}:", width=12, anchor="w").grid(
@@ -860,7 +901,7 @@ class InspectApp:
             info_frame, text="更多資訊", command=self._show_detail,
             state="disabled", bootstyle=(INFO, OUTLINE), width=10,
         )
-        self._btn_detail.grid(row=3, column=1, sticky="e", pady=(4, 0))
+        self._btn_detail.grid(row=5, column=1, sticky="e", pady=(4, 0))
 
         ttk.Separator(parent, orient="horizontal").pack(fill="x", pady=4)
 
@@ -870,19 +911,21 @@ class InspectApp:
         )
         list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
-        columns = ("step", "app", "name", "type", "action", "value", "handler")
+        columns = ("step", "app", "name", "type", "auto_id", "class_name", "action", "value", "handler")
         self._tree = ttk.Treeview(
             list_frame, columns=columns, show="headings", selectmode="browse"
         )
 
         col_cfg = [
             ("step", "步驟", 45),
-            ("app", "窗格名稱", 160),
-            ("name", "Name", 160),
-            ("type", "ControlType", 160),
-            ("action", "Action", 120),
-            ("value", "value", 100),
-            ("handler", "Handler", 120),
+            ("app", "窗格名稱", 140),
+            ("name", "Name", 140),
+            ("type", "ControlType", 140),
+            ("auto_id", "AutomationId", 120),
+            ("class_name", "ClassName", 100),
+            ("action", "Action", 110),
+            ("value", "value", 90),
+            ("handler", "Handler", 100),
         ]
         for col_id, heading, width in col_cfg:
             self._tree.heading(col_id, text=heading, anchor="w")
@@ -1045,6 +1088,8 @@ class InspectApp:
         self._var_app.set("—")
         self._var_name.set("—")
         self._var_type.set("—")
+        self._var_auto_id.set("—")
+        self._var_class_name.set("—")
         self._btn_detail.configure(state="disabled")
 
         self._status_var.set("偵測已結束")
@@ -1066,12 +1111,16 @@ class InspectApp:
                 self._var_app.set(info["app"])
                 self._var_name.set(info["Name"])
                 self._var_type.set(info["ControlType"])
+                self._var_auto_id.set(info.get("AutomationId", ""))
+                self._var_class_name.set(info.get("ClassName", ""))
                 self._btn_detail.configure(state="normal")
             else:
                 self._current_info = None
                 self._var_app.set("（無法偵測）")
                 self._var_name.set("—")
                 self._var_type.set("—")
+                self._var_auto_id.set("—")
+                self._var_class_name.set("—")
                 self._btn_detail.configure(state="disabled")
         except Exception:
             pass
@@ -1125,6 +1174,8 @@ class InspectApp:
         info["value"] = dlg.result["value"]
         if "Wait" in dlg.result:
             info["Wait"] = dlg.result["Wait"]
+        if "found_index" in dlg.result:
+            info["found_index"] = dlg.result["found_index"]
         if "handler" in dlg.result:
             info["handler"] = dlg.result["handler"]
         # 移除內部用的 _elem 參考，不需存入記錄
@@ -1141,6 +1192,8 @@ class InspectApp:
                 info["app"],
                 info["Name"],
                 info["ControlType"],
+                info.get("AutomationId", ""),
+                info.get("ClassName", ""),
                 info["Action"],
                 info["value"],
                 info.get("handler", ""),
@@ -1204,6 +1257,8 @@ class InspectApp:
                     info["app"],
                     info["Name"],
                     info["ControlType"],
+                    info.get("AutomationId", ""),
+                    info.get("ClassName", ""),
                     info["Action"],
                     info["value"],
                     info.get("handler", ""),
@@ -1315,11 +1370,15 @@ class InspectApp:
                     "app": entry.get("app", ""),
                     "Name": entry.get("Name", ""),
                     "ControlType": entry.get("ControlType", ""),
+                    "AutomationId": entry.get("AutomationId", ""),
+                    "ClassName": entry.get("ClassName", ""),
                     "Action": entry.get("Action", ""),
                     "value": entry.get("value", ""),
                 }
                 if "Wait" in entry:
                     item["Wait"] = entry["Wait"]
+                if "found_index" in entry:
+                    item["found_index"] = entry["found_index"]
                 if "handler" in entry:
                     item["handler"] = entry["handler"]
                 items.append(item)
@@ -1374,11 +1433,15 @@ class InspectApp:
                 "app": info["app"],
                 "Name": info["Name"],
                 "ControlType": info["ControlType"],
+                "AutomationId": info.get("AutomationId", ""),
+                "ClassName": info.get("ClassName", ""),
                 "Action": info["Action"],
                 "value": info["value"],
             }
             if "Wait" in info:
                 entry["Wait"] = info["Wait"]
+            if "found_index" in info:
+                entry["found_index"] = info["found_index"]
             if "handler" in info:
                 entry["handler"] = info["handler"]
             data[str(i)] = entry

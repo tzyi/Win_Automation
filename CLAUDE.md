@@ -77,8 +77,11 @@ python inspect_tool.py
     "app": "GeoTag Pro",
     "Name": "folder_open 選擇照片",
     "ControlType": "UIA_TextControlTypeId (0xC364)",
+    "AutomationId": "btnSelectPhotos",
+    "ClassName": "TextBlock",
     "Action": "click_input()",
-    "value": ""
+    "value": "",
+    "found_index": 0
   },
   ...
 }
@@ -88,9 +91,13 @@ python inspect_tool.py
 - `app`：目標應用視窗標題
 - `Name`：控件名稱（顯示文字）
 - `ControlType`：控件類型（UIA_...ControlTypeId 或 pywinauto 名稱）
+- `AutomationId`：控件的 AutomationId（最可靠的識別碼，選填）
+- `ClassName`：控件的 ClassName（選填）
 - `Action`：執行動作（如 click_input()、send_keys()、set_text() 等）
 - `value`：輸入內容（如需）
 - `Wait`：本步驟結束後等待秒數（可選）
+- `found_index`：同類型第 N 個控件，從 0 開始（可選）
+- `handler`：自訂前處理函數名稱（可選）
 
 ### 3. 執行自動化
 
@@ -129,10 +136,14 @@ dlg.child_window(title="控件名稱", control_type="Button").click_input()
 
 ### 控件搜尋策略
 
-1. 先以 title + control_type 精確搜尋
-2. 只用 title（忽略類型）
-3. title 正則模糊比對（容忍空白/特殊字元差異）
-4. 失敗時自動列出所有可見控件協助除錯
+依優先順序嘗試以下策略定位控件：
+
+1. **AutomationId**（auto_id）— 最可靠的唯一識別碼
+2. **ClassName + ControlType**（class_name + control_type）
+3. **Name + ControlType**（title + control_type）— 精確 → 僅 title → 正則局部匹配 → 遍歷 descendants
+4. **found_index**（同類型第 N 個）— 適用於無唯一標識的重複控件
+5. 僅 ControlType（最終降級）
+6. 失敗時自動列出所有可見控件協助除錯（含 AutomationId、ClassName）
 
 ### 支援的操作類型
 
