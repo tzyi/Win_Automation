@@ -1,0 +1,74 @@
+{
+    "1": {
+        "app": "Google - Google Chrome",
+        "Name": "搜尋",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "AutomationId": "APjFqb",
+        "ClassName": "gLFyf",
+        "Action": "send_keys()",
+        "value": "https://www.hospital.fju.edu.tw/OPDSchedule{ENTER}"
+    },
+    "2": {
+        "app": "https://www.hospital.fju.edu.tw/OPDSchedule - Google 搜尋 - Google Chrome",
+        "Name": "依科部掛號 - 天主教輔仁大學附設醫院",
+        "ControlType": "UIA_TextControlTypeId (0xC364)",
+        "AutomationId": "_R8nhaa_6DOXf2roPqJLrkQo_45",
+        "ClassName": "LC20lb MBeuO DKV0Md",
+        "Action": "click()",
+        "value": ""
+    },
+    "3": {
+        "app": "天主教輔仁大學附設醫院 - 依科部掛號 - Google Chrome",
+        "Name": "家庭醫學科",
+        "ControlType": "UIA_HyperlinkControlTypeId (0xC355)",
+        "AutomationId": "",
+        "ClassName": "",
+        "Action": "click()",
+        "value": ""
+    },
+    "4": {
+        "app": "天主教輔仁大學附設醫院 - 依科部掛號 - Google Chrome",
+        "Name": "林嘉俊 [255] 含三高整合門診 可以預約 網路掛號至第129號",
+        "ControlType": "UIA_HyperlinkControlTypeId (0xC355)",
+        "AutomationId": "",
+        "ClassName": " ok",
+        "Action": "click()",
+        "value": ""
+    },
+    "5": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "身分證字號：(或病歷號碼)",
+        "ControlType": "UIA_EditControlTypeId (0xC354)",
+        "AutomationId": "IDNO",
+        "ClassName": "",
+        "Action": "set_text()",
+        "value": "Qxxxxxxxxx"
+    },
+    "6": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "年",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "AutomationId": "BirthYear",
+        "ClassName": "sel_year",
+        "Action": "send_keys()",
+        "value": "1994"
+    },
+    "7": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "月",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "AutomationId": "BirthMonth",
+        "ClassName": "sel_month",
+        "Action": "send_keys()",
+        "value": "4"
+    },
+    "8": {
+        "app": "天主教輔仁大學附設醫院 - 就醫指南 - 網路掛號 - Google Chrome",
+        "Name": "日",
+        "ControlType": "UIA_ComboBoxControlTypeId (0xC353)",
+        "AutomationId": "BirthDay",
+        "ClassName": "sel_day",
+        "Action": "send_keys()",
+        "value": "8"
+    }
+}
