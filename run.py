@@ -488,13 +488,13 @@ def find_control(dlg, control_name: str, control_type: str, step_label: str,
     raise RuntimeError(f"找不到控件: '{control_name}' (type={control_type}, auto_id='{auto_id}', class='{class_name}')")
 
 
-def execute_steps(config: dict):
+def execute_steps(config: dict, backend: str = "uia"):
     """依序執行 exec.json 中定義的所有步驟"""
     sorted_keys = sorted(config.keys(), key=lambda x: int(x))
     total = len(sorted_keys)
 
     logger.info("=" * 60)
-    logger.info(f"開始執行自動化流程，共 {total} 個步驟")
+    logger.info(f"開始執行自動化流程，共 {total} 個步驟 (後端: {backend})")
     logger.info("=" * 60)
 
     # 快取已連線的 app，避免相同視窗重複 connect()
@@ -532,13 +532,13 @@ def execute_steps(config: dict):
             if app_title not in app_cache:
                 logger.info(f"{step_label} 正在連接應用程式: {app_title} ...")
                 try:
-                    app = Application(backend="uia").connect(
+                    app = Application(backend=backend).connect(
                         title=app_title, timeout=CONNECT_TIMEOUT
                     )
                 except Exception:
                     # 精確標題連接失敗，降級為正則部分匹配（如 "Google Chrome" 可匹配 "XXX - Google Chrome"）
                     logger.warning(f"{step_label} 精確標題連接失敗，嘗試部分匹配 ...")
-                    app = Application(backend="uia").connect(
+                    app = Application(backend=backend).connect(
                         title_re=f".*{re.escape(app_title)}.*", timeout=CONNECT_TIMEOUT
                     )
                 app_cache[app_title] = app
@@ -624,12 +624,14 @@ def execute_steps(config: dict):
 def main():
     parser = argparse.ArgumentParser(description="Win_Automation - Windows GUI 自動化腳本")
     parser.add_argument("--case", type=str, default="exec.json", help="指定要執行的 JSON 設定檔 (預設: exec.json)")
+    parser.add_argument("--backend", type=str, default="uia", choices=["uia", "win32"], help="pywinauto 後端 (預設: uia)")
     args = parser.parse_args()
 
     start_time = time.time()
     logger.info("Win_Automation 啟動")
+    logger.info(f"使用後端: {args.backend}")
     config = load_config(args.case)
-    execute_steps(config)
+    execute_steps(config, backend=args.backend)
     elapsed = time.time() - start_time
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)

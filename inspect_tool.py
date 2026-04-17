@@ -998,6 +998,20 @@ class InspectApp:
             config_frame, text="瀏覽...", command=self._browse_runner_config, bootstyle=(INFO, OUTLINE)
         ).pack(side="left", padx=4)
 
+        # --- 後端選擇區 ---
+        backend_frame = ttk.Labelframe(parent, text="pywinauto 後端", padding=8, bootstyle=INFO)
+        backend_frame.pack(fill="x", padx=8, pady=(4, 4))
+
+        self._backend_var = tk.StringVar(value="uia")
+        ttk.Radiobutton(
+            backend_frame, text="UIA（推薦，支援現代 UI 框架）",
+            variable=self._backend_var, value="uia", bootstyle=INFO,
+        ).pack(side="left", padx=(0, 16))
+        ttk.Radiobutton(
+            backend_frame, text="Win32（適用傳統 Win32 應用）",
+            variable=self._backend_var, value="win32", bootstyle=INFO,
+        ).pack(side="left", padx=(0, 8))
+
         # --- 執行控制區 ---
         exec_frame = ttk.Frame(parent, padding=6)
         exec_frame.pack(fill="x", padx=8)
@@ -1498,12 +1512,12 @@ class InspectApp:
             # 打包後：使用同目錄下的 run.exe
             base_dir = os.path.dirname(sys.executable)
             run_exe = os.path.join(base_dir, "run.exe")
-            cmd = [run_exe, "--case", config_path]
+            cmd = [run_exe, "--case", config_path, "--backend", self._backend_var.get()]
         else:
             run_py = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), "run.py"
             )
-            cmd = [sys.executable, run_py, "--case", config_path]
+            cmd = [sys.executable, run_py, "--case", config_path, "--backend", self._backend_var.get()]
         self._runner_process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
